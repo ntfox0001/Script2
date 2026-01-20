@@ -1,0 +1,8 @@
+D:\Work\Script2\obj\Debug\net8.0\script2.GeneratedMSBuildEditorConfig.editorconfig
+D:\Work\Script2\obj\Debug\net8.0\script2.AssemblyInfoInputs.cache
+D:\Work\Script2\obj\Debug\net8.0\script2.AssemblyInfo.cs
+D:\Work\Script2\obj\Debug\net8.0\script2.csproj.CoreCompileInputs.cache
+D:\Work\Script2\obj\Debug\net8.0\script2.csproj.AssemblyReference.cache
+D:\Work\Script2\obj\Debug\net8.0\script2.gentestingplatformentrypointinputcache.cache
+D:\Work\Script2\obj\Debug\net8.0\script2.genautoregisteredextensionsinputcache.cache
+D:\Work\Script2\obj\Debug\net8.0\script2.sourcelink.json
