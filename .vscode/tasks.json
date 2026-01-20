@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // 任务名称，要和launch.json中的preLaunchTask一致
+            "label": "build",
+            // 任务类型
+            "type": "process",
+            // 构建命令（dotnet build）
+            "command": "dotnet",
+            // 命令参数：build + 你的项目文件路径
+            "args": [
+                "build",
+                "${workspaceFolder}/script2.csproj",
+                // 可选：指定框架版本
+                "--framework",
+                "net8.0"
+            ],
+            // 执行目录
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            // 任务组：构建组
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            // 问题匹配器（识别编译错误）
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
