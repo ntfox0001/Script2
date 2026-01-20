@@ -92,7 +92,19 @@ namespace TestProject
             var sample = new[] { "var", "a", "=", "1" };
             foreach (var t in tokens)
             {
-                Console.Write($"{t.Span.ToStringValue()} -> {t.Kind.ToString()}");
+                Console.Write($"{t.Span.ToStringValue()} -> {t.Kind.ToString()}\n");
+            }
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
+        }
+        
+        [Test]
+        public void TestTokenizer2()
+        {
+            var tokens = _tokenizer.Tokenize("var a = true");
+            var sample = new[] { "var", "a", "=", "true" };
+            foreach (var t in tokens)
+            {
+                Console.Write($"{t.Span.ToStringValue()} -> {t.Kind.ToString()}\n");
             }
             Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }

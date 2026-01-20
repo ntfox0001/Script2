@@ -1,19 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Script2.Parser;
+﻿using Script2.Parser;
 using Superpower.Model;
 
 namespace Script2.TokenizerProcessor
 {
-    public class Keyword : ITokenProcessor
+    public class Operator : ITokenProcessor
     {
         private readonly Dictionary<string, Script2Token> _keywords;
         private readonly HashSet<char> _firstChar;
         private readonly string _expectations;
+        private readonly int _len;
         
-        public Keyword(Dictionary<string, Script2Token> keywords, string expectations)
+        public Operator(Dictionary<string, Script2Token> keywords, int len, string expectations)
         {
             _keywords = keywords;
+            _len = len;
             _expectations = expectations;
             _firstChar = new HashSet<char>(_keywords.Keys.Select(o => o[0]));
         }
@@ -25,17 +25,17 @@ namespace Script2.TokenizerProcessor
 
         public Result<Script2Token> Process(Result<char> span, out Result<TextSpan> result)
         {
-            result = Strings.Keyword(_keywords.Keys)(span.Location);
+            result = Strings.ContainsStringByLen(_keywords.Keys, _len)(span.Location);
             if (result.HasValue)
             {
                 var strVal = result.Value.ToStringValue();
                 if (_keywords.TryGetValue(strVal, out var token))
                 {
                     return Result.Value(token, result.Location, result.Remainder);
-                }
+                }    
             }
             
             return Result.Empty<Script2Token>(span.Location, new[] { _expectations });
         }
-    }
+    }    
 }

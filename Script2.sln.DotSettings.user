@@ -1,9 +1,4 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=bea55383_002D4e93_002D43e0_002D9ef8_002D35da0d20e23b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Script2ParserIfTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::6E989961-D696-4714-9A2B-1CF4E06F221E::net7.0::TestProject.Script2ParserIfTest&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::6E989961-D696-4714-9A2B-1CF4E06F221E::net8.0::TestProject.Script2ParserIfTest&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::6E989961-D696-4714-9A2B-1CF4E06F221E::net8.0::TestProject.Script2TokenizerTest.TestFuncCall1&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::6E989961-D696-4714-9A2B-1CF4E06F221E::net8.0::TestProject.Script2StringParserTest.Test2&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+  &lt;Project Location="D:\Work\Script2\Test\TestProject" Presentation="&amp;lt;TestProject&amp;gt;" /&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
