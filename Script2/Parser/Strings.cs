@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Superpower;
+﻿using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
 
@@ -15,8 +13,7 @@ namespace Script2.Parser
 
         public static TextParser<TextSpan> ContainsString(ICollection<string> contains)
         {
-            return Span.MatchedBy(Span.WithoutAny(char.IsWhiteSpace))
-                .Where(span => contains.Contains(span.ToString()));
+            return Span.WithoutAny(char.IsWhiteSpace).Where(span => contains.Contains(span.ToString()));
         }
     }
 }

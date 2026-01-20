@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using GoFire.Kernel.Script2;
+using Script2;
 using NUnit.Framework;
 using Superpower;
 
@@ -20,7 +20,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("9");
             var sample = new[] { "9" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -28,7 +28,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize(@"""aab""");
             var sample = new[] { @"""aab""" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("max(9, 81)");
             var sample = new[] { "max", "(", "9", ",", "81", ")" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize(@"max(""aab"", 81)");
             var sample = new[] { "max", "(", @"""aab""", ",", "81", ")" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("_max(9, 81, 3)");
             var sample = new[] { "_max", "(", "9", ",", "81", ",", "3", ")" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -66,7 +66,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("max_a(9, 81, 3)");
             var sample = new[] { "max_a", "(", "9", ",", "81", ",", "3", ")" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("9 + 81 - 3 * 522 / 2");
             var sample = new[] { "9", "+", "81", "-", "3", "*", "522", "/", "2" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -82,7 +82,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("9.81");
             var sample = new[] { "9.81" };
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -92,9 +92,9 @@ namespace TestProject
             var sample = new[] { "var", "a", "=", "1" };
             foreach (var t in tokens)
             {
-                Debug.Log($"{t.Span.ToStringValue()} -> {t.Kind.ToString()}");
+                Console.Write($"{t.Span.ToStringValue()} -> {t.Kind.ToString()}");
             }
-            Assert.AreEqual(sample, tokens.Select(x => x.ToStringValue()).ToArray());
+            Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
 
         [Test]
@@ -102,23 +102,23 @@ namespace TestProject
         {
             var s = "5;";
             var tokens = _tokenizer.Tokenize(s);
-            Debug.Log("=== Tokens' ===");
+            Console.WriteLine("=== Tokens' ===");
             for (int i = 0; i < tokens.Count(); i++)
             {
                 var t = tokens.ElementAt(i);
-                Debug.Log($"[{i}] {t.Kind}: '{t.Span.ToStringValue()}'");
+                Console.WriteLine($"[{i}] {t.Kind}: '{t.Span.ToStringValue()}'");
             }
 
             try
             {
                 var r = Script2Parser.Factor.Parse(tokens);
-                Debug.Log($"=== Success: {r} ===");
+                Console.WriteLine($"=== Success: {r} ===");
             }
             catch (ParseException ex)
             {
-                Debug.LogError($"=== Error ===");
-                Debug.LogError($"Message: {ex.Message}");
-                Debug.LogError($"Position: Line {ex.ErrorPosition.Line}, Column {ex.ErrorPosition.Column}");
+                Console.WriteLine($"=== Error ===");
+                Console.WriteLine($"Message: {ex.Message}");
+                Console.WriteLine($"Position: Line {ex.ErrorPosition.Line}, Column {ex.ErrorPosition.Column}");
                 throw;
             }
         }

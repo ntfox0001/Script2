@@ -15,5 +15,5 @@ namespace Script2.TokenizerProcessor
             result = Numerics.Decimal(span.Location);
             return Result.Value(Script2Token.Number, result.Location, result.Remainder);
         }
-    }
+    }    
 }

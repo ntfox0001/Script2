@@ -1,5 +1,5 @@
-﻿using GoFire.Kernel.Script2;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using Script2;
 
 public class Script2ParserTest
     {
@@ -11,7 +11,7 @@ public class Script2ParserTest
         {
             var env = new Script2Environment();
             var r = Script2Parser.Execute("Max(9, 81)", env);
-            Assert.AreEqual(r, 81);
+            Assert.That(r, Is.EqualTo(81));
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ var b = Max(3, a)
 b + 2
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(11, r);
+            Assert.That(11, Is.EqualTo(r));
         }
         /// <summary>
         /// 测试变量声明，函数调用，表达式计算 带有分号
@@ -42,7 +42,7 @@ var b = Max(3, a);
 b + 2;
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(11, r);
+            Assert.That(11, Is.EqualTo(r));
         }
         /// <summary>
         /// 测试常量带有分号
@@ -53,7 +53,7 @@ b + 2;
             var env = new Script2Environment();
             var s = @"5;";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(5, r);
+            Assert.That(5, Is.EqualTo(r));
         }
         /// <summary>
         /// 测试常量带有分号
@@ -64,7 +64,7 @@ b + 2;
             var env = new Script2Environment();
             var s = @"5;6";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(6, r);
+            Assert.That(6, Is.EqualTo(r));
         }
         [Test]
         public void TestLambda7()
@@ -74,7 +74,7 @@ b + 2;
 var a = Max(3, 5)+3
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(8, r);
+            Assert.That(8, Is.EqualTo(r));
         }
         
         /// <summary>
@@ -90,7 +90,7 @@ var b = Max(3, a);
 b + 2
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(11, r);
+            Assert.That(11, Is.EqualTo(r));
         }
         
         /// <summary>
@@ -104,6 +104,6 @@ b + 2
 var a = Max(3, Min(4, 1))+3
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.AreEqual(6, r);
+            Assert.That(6, Is.EqualTo(r));
         }
     }

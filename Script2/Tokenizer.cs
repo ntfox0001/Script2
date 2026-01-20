@@ -1,4 +1,7 @@
-﻿namespace Script2
+﻿using Superpower;
+using Superpower.Model;
+
+namespace Script2
 {
     public interface ITokenProcessor
     {

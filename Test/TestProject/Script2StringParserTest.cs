@@ -1,6 +1,8 @@
 ﻿using NUnit.Framework;
-using GoFire.Kernel.Script2.Parser;
+using Script2.Parser;
+using Superpower;
 using Superpower.Model;
+using Superpower.Parsers;
 
 namespace TestProject
 {
@@ -10,7 +12,13 @@ namespace TestProject
         public void Test1()
         {
             var a = Strings.ContainsString(new[] { "var", "if" })(new TextSpan("var a = 1"));
-            Assert.AreEqual("var", a.Value.ToStringValue());
+            Assert.That("var", Is.EqualTo(a.Value.ToStringValue()));
+        }
+        [Test]
+        public void Test2()
+        {
+            var a = Strings.ContainsString(new[] { "var", "if" })(new TextSpan("var a = 1"));
+            Assert.That("var", Is.EqualTo(a.Value.ToStringValue()));
         }
     }
 }

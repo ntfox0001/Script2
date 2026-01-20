@@ -1,4 +1,4 @@
-﻿using GoFire.Kernel.Script2;
+﻿using Script2;
 using NUnit.Framework;
 using Superpower;
 
@@ -18,7 +18,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("9.81");
             var r = Script2Parser.Constant.Parse(tokens);
-            Assert.AreEqual(r.ToString(), "9.81");
+            Assert.That(r.ToString(), Is.EqualTo("9.81"));
         }
 
         [Test]
@@ -26,7 +26,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("max(9, 81)");
             var r = Script2Parser.FuncCall.Parse(tokens);
-            Debug.Log(r.ToString());
+            Console.Write(r.ToString());
         }
 
         [Test]
@@ -34,7 +34,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("max(9, 81)");
             var r = Script2Parser.Factor.Parse(tokens);
-            Debug.Log(r.ToString());
+            Console.Write(r.ToString());
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace TestProject
         {
             var tokens = _tokenizer.Tokenize("5;4");
             var r = Script2Parser.Program.Parse(tokens);
-            Debug.Log(r.ToString());
+            Console.Write(r.ToString());
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace TestProject
             var r = Script2Parser.SetVar.Parse(tokens);
             //foreach (var e in r)
             {
-                Debug.Log(r.ToString());
+                Console.Write(r.ToString());
             }
         }
     }
