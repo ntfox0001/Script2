@@ -7,15 +7,24 @@ namespace Script2
         private static readonly Dictionary<string, Script2Token> SingleOperators =
             new()
             {
-                ["("] = Script2Token.LParen,
-                [")"] = Script2Token.RParen,
                 ["+"] = Script2Token.Plus,
                 ["-"] = Script2Token.Minus,
                 ["*"] = Script2Token.Times,
                 ["/"] = Script2Token.Divide,
+                
                 ["="] = Script2Token.Equals,
+                
                 [">"] = Script2Token.Greater,
                 ["<"] = Script2Token.Less,
+                
+                [","] = Script2Token.Comma,
+                [";"] = Script2Token.Semicolon,
+                
+                ["{"] = Script2Token.LBrace,
+                ["}"] = Script2Token.RBrace,
+                
+                ["("] = Script2Token.LParen,
+                [")"] = Script2Token.RParen,
             };
         
         private static readonly Dictionary<string, Script2Token> TwoCharOperators =
