@@ -271,10 +271,36 @@ namespace Script2
         
         private static Expression MakeComparison(ExpressionType comparisonType, Expression left, Expression right)
         {
-            // 将左右操作数转换为可比较的类型
-            Expression convertedLeft = Expression.Convert(left, typeof(float));
-            Expression convertedRight = Expression.Convert(right, typeof(float));
-            return Expression.MakeBinary(comparisonType, convertedLeft, convertedRight);
+            // 检查左右操作数的类型
+            var leftType = left.Type;
+            var rightType = right.Type;
+    
+            // 如果都是float类型，直接比较数值
+            if (leftType == typeof(float) && rightType == typeof(float))
+            {
+                return Expression.MakeBinary(comparisonType, left, right);
+            }
+    
+            // 如果都是字符串类型，直接比较字符串
+            if (leftType == typeof(string) && rightType == typeof(string))
+            {
+                return Expression.MakeBinary(comparisonType, left, right);
+            }
+    
+            // 尝试将非float类型转换为float进行比较
+            try
+            {
+                Expression convertedLeft = leftType == typeof(float) ? left : Expression.Convert(left, typeof(float));
+                Expression convertedRight = rightType == typeof(float) ? right : Expression.Convert(right, typeof(float));
+                return Expression.MakeBinary(comparisonType, convertedLeft, convertedRight);
+            }
+            catch
+            {
+                // 如果转换为float失败，再尝试转换为字符串进行比较
+                var stringLeft = leftType == typeof(string) ? left : Expression.Call(left, "ToString", Type.EmptyTypes);
+                var stringRight = rightType == typeof(string) ? right : Expression.Call(right, "ToString", Type.EmptyTypes);
+                return Expression.MakeBinary(comparisonType, stringLeft, stringRight);
+            }
         }
         
         private static Expression MakeLogical(ExpressionType logicalType, Expression left, Expression right)
