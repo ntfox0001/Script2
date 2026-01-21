@@ -19,7 +19,7 @@ if (a > b) {
 }
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(10, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(10));
         }
 
         [Test]
@@ -36,7 +36,7 @@ if (a < b) {
 }
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(5, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(5));
         }
 
         [Test]
@@ -51,7 +51,7 @@ if (a > b) {
 }
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(10, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(10));
         }
 
     }
