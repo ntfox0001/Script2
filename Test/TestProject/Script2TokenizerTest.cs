@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Script2;
+﻿using Script2;
 using NUnit.Framework;
 using Superpower;
 

@@ -1,8 +1,6 @@
 ﻿using NUnit.Framework;
 using Script2.Parser;
-using Superpower;
 using Superpower.Model;
-using Superpower.Parsers;
 
 namespace TestProject
 {

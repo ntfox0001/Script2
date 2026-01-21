@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using Superpower;
-using Superpower.Model;
 using Superpower.Parsers;
 
 namespace Script2
 {
-    using Expression = System.Linq.Expressions.Expression;
-
     public static class Script2Parser
     {
         // 静态字段：统一的参数

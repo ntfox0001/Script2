@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Script2
+﻿namespace Script2
 {
     internal static class TypeExtensions
     {

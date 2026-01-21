@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-
-namespace Script2
+﻿namespace Script2
 {
-    using Expression = System.Linq.Expressions.Expression;
-
     public class Script2Environment
     {
         public Dictionary<string, Func<object[], object>> Functions { get; } = new();
