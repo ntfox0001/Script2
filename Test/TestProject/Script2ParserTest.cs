@@ -72,9 +72,10 @@ b + 2;
             var env = new Script2Environment();
             var s = @"
 var a = Max(3, 5)+3
+a;
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(8, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(8));
         }
         
         /// <summary>
@@ -90,7 +91,7 @@ var b = Max(3, a);
 b + 2
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(11, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(11));
         }
         
         /// <summary>
@@ -101,9 +102,10 @@ b + 2
         {
             var env = new Script2Environment();
             var s = @"
-var a = Max(3, Min(4, 1))+3
+var a = Max(3, Min(4, 1))+3;
+a
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(6, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(6));
         }
     }

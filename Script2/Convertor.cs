@@ -80,6 +80,19 @@
             return (param1, param2, param3);
         }
 
+        /// <summary>
+        /// 批量转换四个参数
+        /// </summary>
+        public static (T1, T2, T3, T4) ConvertToTargetTypes<T1, T2, T3, T4>(object raw1, object raw2, object raw3, object raw4,
+            string funcName)
+        {
+            var param1 = ConvertToTargetType<T1>(raw1);
+            var param2 = ConvertToTargetType<T2>(raw2);
+            var param3 = ConvertToTargetType<T3>(raw3);
+            var param4 = ConvertToTargetType<T4>(raw4);
+            return (param1, param2, param3, param4);
+        }
+
         #endregion
     }
 }

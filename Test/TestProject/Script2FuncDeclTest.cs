@@ -19,7 +19,7 @@ public class Script2FuncDeclTest
                 {
                     var r = Script2Parser.Execute(s, env);
                     Assert.That(r, Is.Null);
-                    Assert.That(env.Functions.ContainsKey("add"), Is.True, "Function 'add' should be registered");
+                    Assert.That(env.HasFunction("add"), Is.True, "Function 'add' should be registered");
                 }
                 catch (Exception ex)
                 {
@@ -51,6 +51,8 @@ public class Script2FuncDeclTest
             {
                 var env = new Script2Environment();
                 var s = @"
+    var x = 22
+    var y = 11
     add(a, b) {
         var x = a * 2
         var y = b * 3

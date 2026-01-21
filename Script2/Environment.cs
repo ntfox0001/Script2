@@ -2,23 +2,62 @@
 {
     public class Script2Environment
     {
-        public Dictionary<string, Func<object[], object>> Functions { get; } = new();
-        public Dictionary<string, object> Variables { get; } = new();
+        // 根环境，所有子环境共享
+        private Script2Environment _rootEnv = null;
+        
+        // 变量字典（当前环境的本地变量）
+        private Dictionary<string, object> _variables = new();
+
+        // 函数字典（根环境拥有，子环境共享）
+        private Dictionary<string, Func<object[], object>> _functions = new();
 
         /// <summary>
-        /// 安全地获取变量值
+        /// 构造函数 - 创建根环境
+        /// </summary>
+        public Script2Environment()
+        {
+            // 根环境的 _rootEnv 为 null
+        }
+
+        /// <summary>
+        /// 私有构造函数 - 创建子环境
+        /// </summary>
+        private Script2Environment(Script2Environment rootEnv)
+        {
+            _rootEnv = rootEnv;
+            _functions = rootEnv._functions; // 共享函数字典
+            _variables = new Dictionary<string, object>(); // 独立的本地变量
+        }
+
+        /// <summary>
+        /// 获取变量值（先查本地变量，找不到则查询根环境）
         /// </summary>
         public object GetVariableValue(string varName)
         {
-            if (!Variables.TryGetValue(varName, out var value))
-                throw new InvalidOperationException($"Variable '{varName}' is not defined.");
+            // 先查本地变量
+            if (_variables.TryGetValue(varName, out var value))
+                return value;
 
-            return value;
+            // 如果不是根环境，尝试从根环境获取
+            if (_rootEnv != null)
+            {
+                return _rootEnv.GetVariableValue(varName);
+            }
+
+            throw new InvalidOperationException($"Variable '{varName}' is not defined.");
+        }
+
+        /// <summary>
+        /// 设置变量值（设置到当前环境的本地变量）
+        /// </summary>
+        public void SetVariableValue(string varName, object value)
+        {
+            _variables[varName] = value;
         }
 
         public object CallFunction(string fn, object[] args)
         {
-            if (Functions.TryGetValue(fn, out var func))
+            if (_functions.TryGetValue(fn, out var func))
             {
                 return func(args);
             }
@@ -34,28 +73,32 @@
         }
 
         /// <summary>
-        /// 注册自定义函数
+        /// 检查是否存在指定函数
         /// </summary>
-        public void RegisterFunction(string name, Delegate func)
+        public bool HasFunction(string name)
         {
-            Functions[name] = args => func.DynamicInvoke(args);
+            return _functions.ContainsKey(name);
         }
 
         /// <summary>
-        /// 克隆环境并创建新的变量作用域
+        /// 注册自定义函数（只能在根环境中注册）
         /// </summary>
-        public Script2Environment CloneWithVariables()
+        public void RegisterFunction(string name, Delegate func)
         {
-            var newEnv = new Script2Environment();
-            // 复制函数
-            foreach (var kvp in Functions)
-            {
-                newEnv.Functions[kvp.Key] = kvp.Value;
-            }
-            // 变量字典是独立的，不复制
-            return newEnv;
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[name] = func.DynamicInvoke;
         }
 
+        /// <summary>
+        /// 创建子环境（共享函数字典，独立的本地变量）
+        /// </summary>
+        public Script2Environment CreateChildEnvironment()
+        {
+            return new Script2Environment(_rootEnv ?? this);
+        }
+        
         /// <summary>
         /// 在Math类中查找匹配的方法重载
         /// </summary>
@@ -78,10 +121,13 @@
             return matchingMethods[0];
         }
 
-        // 单个参数的函数注册
+        // 单个参数的函数注册（只能在根环境中注册）
         public void RegisterFunc<TR, T1>(string funcName, Func<T1, TR> func)
         {
-            Functions[funcName] = args =>
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
             {
                 if (args == null || args.Length != 1)
                     throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
@@ -91,16 +137,51 @@
             };
         }
 
-        // 两个参数的函数注册
+        // 两个参数的函数注册（只能在根环境中注册）
         public void RegisterFunc<TR, T1, T2>(string funcName, Func<T1, T2, TR> func)
         {
-            Functions[funcName] = args =>
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
             {
                 if (args == null || args.Length != 2)
                     throw new InvalidOperationException($"Function '{funcName}' expects 2 arguments.");
 
                 var (arg1, arg2) = Convertor.ConvertToTargetTypes<T1, T2>(args[0], args[1], funcName);
                 return func(arg1, arg2);
+            };
+        }
+
+        // 三个参数的函数注册（只能在根环境中注册）
+        public void RegisterFunc<TR, T1, T2, T3>(string funcName, Func<T1, T2, T3, TR> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args == null || args.Length != 3)
+                    throw new InvalidOperationException($"Function '{funcName}' expects 3 arguments.");
+
+                var (arg1, arg2, arg3) = Convertor.ConvertToTargetTypes<T1, T2, T3>(args[0], args[1], args[2], funcName);
+                return func(arg1, arg2, arg3);
+            };
+        }
+
+        // 四个参数的函数注册（只能在根环境中注册）
+        public void RegisterFunc<TR, T1, T2, T3, T4>(string funcName, Func<T1, T2, T3, T4, TR> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args == null || args.Length != 4)
+                    throw new InvalidOperationException($"Function '{funcName}' expects 4 arguments.");
+
+                var (arg1, arg2, arg3, arg4) = Convertor.ConvertToTargetTypes<T1, T2, T3, T4>(args[0], args[1], args[2], args[3], funcName);
+                return func(arg1, arg2, arg3, arg4);
             };
         }
     }

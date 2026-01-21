@@ -263,9 +263,9 @@ namespace Script2
                 Expression.Parameter(typeof(object), paramName))
                 .ToArray();
 
-            // 创建新的局部变量字典表达式来隔离函数作用域
+            // 创建子环境来隔离函数作用域
             var newEnvMethod = typeof(Script2Environment)
-                .GetMethod(nameof(Script2Environment.CloneWithVariables));
+                .GetMethod(nameof(Script2Environment.CreateChildEnvironment));
 
             var newEnvExpr = Expression.Call(_envParam, newEnvMethod!);
 
@@ -276,14 +276,13 @@ namespace Script2
             var argAssignments = new List<Expression>();
             for (int i = 0; i < parameters.Length; i++)
             {
-                var variablesExpr = Expression.Property(newEnvVar, "Variables");
-                var varExpr = Expression.Property(
-                    variablesExpr,
-                    "Item",
-                    Expression.Constant(paramList[i])
-                );
-                argAssignments.Add(Expression.Assign(
-                    varExpr,
+                var setVarMethod = typeof(Script2Environment)
+                    .GetMethod(nameof(Script2Environment.SetVariableValue));
+                
+                argAssignments.Add(Expression.Call(
+                    newEnvVar,
+                    setVarMethod!,
+                    Expression.Constant(paramList[i]),
                     parameters[i]
                 ));
             }
@@ -353,14 +352,13 @@ namespace Script2
         
         private static Expression SetVariable(string varName, Expression value)
         {
-            var variablesExpr = Expression.Property(_envParam, "Variables");
-            var varExpr = Expression.Property(
-                variablesExpr,
-                "Item",
-                Expression.Constant(varName)
-            );
-            return Expression.Assign(
-                varExpr,
+            var setVarMethod = typeof(Script2Environment)
+                .GetMethod(nameof(Script2Environment.SetVariableValue));
+            
+            return Expression.Call(
+                _envParam,
+                setVarMethod!,
+                Expression.Constant(varName),
                 Expression.Convert(value, typeof(object))
             );
         }
