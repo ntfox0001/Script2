@@ -193,7 +193,9 @@ namespace Script2
         
         public static readonly TokenListParser<Script2Token, Expression> IfStatementImpl = 
             from ifKeyword in Token.EqualTo(Script2Token.If)
+            from lp in Token.EqualTo(Script2Token.LParen)
             from condition in Parse.Ref(() => Expr)
+            from rp in Token.EqualTo(Script2Token.RParen)
             from thenBranch in Parse.Ref(() => StatementBlock)
             from elseBranch in (
                 from elseKw in Token.EqualTo(Script2Token.Else)
