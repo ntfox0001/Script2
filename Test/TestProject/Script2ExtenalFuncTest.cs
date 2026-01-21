@@ -30,7 +30,7 @@ public class Script2ExtenalFuncTest
         env.RegisterFunc<bool, bool>("Test1", (arg1) => arg1);
         var s = @"
 var a = true;
-if Test1(a) {
+if (Test1(a)) {
     5;
 }
 else {
@@ -48,7 +48,7 @@ else {
         env.RegisterFunc<string, string>("Test1", (arg1) => arg1);
         var s = @"
 var a = ""aab"";
-if Test1(a) == ""aab"" {
+if (Test1(a) == ""aab"") {
     5;
 }
 else {

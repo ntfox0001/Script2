@@ -8,7 +8,47 @@ namespace Script2
     {
         // 静态字段：统一的参数
         private static readonly ParameterExpression _envParam = Expression.Parameter(typeof(Script2Environment), "env");
-        
+        private static readonly Dictionary<string, Expression> _funcDecls = new();
+
+        /// <summary>
+        /// 表达式访问器，用于替换环境参数
+        /// </summary>
+        private class EnvParameterReplacer : ExpressionVisitor
+        {
+            private readonly Expression _newEnv;
+
+            public EnvParameterReplacer(Expression newEnv)
+            {
+                _newEnv = newEnv;
+            }
+
+            protected override Expression VisitMember(MemberExpression node)
+            {
+                if (node.Expression == _envParam)
+                {
+                    return Expression.MakeMemberAccess(_newEnv, node.Member);
+                }
+                return base.VisitMember(node);
+            }
+
+            protected override Expression VisitMethodCall(MethodCallExpression node)
+            {
+                if (node.Object == _envParam)
+                {
+                    var newArguments = Visit(node.Arguments);
+                    return Expression.Call(_newEnv, node.Method, newArguments);
+                }
+                return base.VisitMethodCall(node);
+            }
+
+            protected override Expression VisitParameter(ParameterExpression node)
+            {
+                if (node == _envParam)
+                    return _newEnv;
+                return base.VisitParameter(node);
+            }
+        }
+
         static TokenListParser<Script2Token, ExpressionType> Operator(Script2Token op,
             ExpressionType opType)
         {
@@ -64,10 +104,24 @@ namespace Script2
                     Token.EqualTo(Script2Token.False)
                         .Select(f => (Expression)Expression.Constant(false))
                 );
-        
-        public static readonly TokenListParser<Script2Token, Expression[]> ArgList = 
-            Parse.Ref(() => Expr).ManyDelimitedBy(Token.EqualTo(Script2Token.Comma));
 
+        // 参数列表解析器：只接受标识符，使用 ManyDelimitedBy，支持空列表
+        public static readonly TokenListParser<Script2Token, string[]> ParamList =
+            Token.EqualTo(Script2Token.Identifier)
+                .Select(t => t.ToStringValue())
+                .ManyDelimitedBy(Token.EqualTo(Script2Token.Comma));
+
+        public static readonly TokenListParser<Script2Token, Expression[]> ArgList =
+            Parse.Ref(() => Expr).ManyDelimitedBy(Token.EqualTo(Script2Token.Comma));
+        
+        public static readonly TokenListParser<Script2Token, Expression> FuncDecl =
+            from id in Token.EqualTo(Script2Token.Identifier)
+            from lp in Token.EqualTo(Script2Token.LParen)
+            from paramList in ParamList.Try()
+            from rp in Token.EqualTo(Script2Token.RParen)
+            from body in Parse.Ref(() => StatementBlock)
+            select MakeFuncDecl(id.ToStringValue(), paramList, body);
+        
         public static readonly TokenListParser<Script2Token, Expression> FuncCall = 
             from fn in Token.EqualTo(Script2Token.Identifier)
             from lp in Token.EqualTo(Script2Token.LParen)
@@ -91,6 +145,7 @@ namespace Script2
                 from expr in Parse.Ref(() => Expr)
                 from rparen in Token.EqualTo(Script2Token.RParen)
                 select expr)
+            .Or(FuncDecl).Try()  // 先尝试匹配函数声明
             .Or(FuncCall).Try()  // 先尝试匹配函数调用
             .Or(GetVar)    // 再匹配变量引用
             .Or(Constant);
@@ -153,32 +208,123 @@ namespace Script2
                 select stmt
             ).Many();
         
-        public static readonly TokenListParser<Script2Token, Expression<Func<Script2Environment, object>>> Lambda = 
-            Program.AtEnd().Select(statements => 
+        public static readonly TokenListParser<Script2Token, Expression<Func<Script2Environment, object>>> Lambda =
+            Program.AtEnd().Select(statements =>
             {
                 // 如果没有语句，返回默认值
                 if (statements.Length == 0)
                     return Expression.Lambda<Func<Script2Environment, object>>(
                         Expression.Constant(null), _envParam);
-        
+
                 // 如果只有一个语句，直接返回（转换为 object 类型）
                 if (statements.Length == 1)
+                {
+                    var stmt = statements[0];
+                    // 如果是 void 类型，执行它并返回 null
+                    if (stmt.Type == typeof(void))
+                        return Expression.Lambda<Func<Script2Environment, object>>(
+                            Expression.Block(
+                                typeof(object),
+                                stmt,
+                                Expression.Constant(null, typeof(object))
+                            ),
+                            _envParam);
                     return Expression.Lambda<Func<Script2Environment, object>>(
-                        Expression.Convert(statements[0], typeof(object)), 
+                        Expression.Convert(stmt, typeof(object)),
                         _envParam);
-        
+                }
+
                 // 如果有多个语句，创建一个块表达式
                 var nonLastStatements = statements.Take(statements.Length - 1);
                 var lastStatement = statements.Last();
+
+                // 如果最后一个语句是 void 类型，执行它并返回 null
+                Expression lastExpr;
+                if (lastStatement.Type == typeof(void))
+                    lastExpr = Expression.Constant(null, typeof(object));
+                else
+                    lastExpr = Expression.Convert(lastStatement, typeof(object));
+
                 return Expression.Lambda<Func<Script2Environment, object>>(
                     Expression.Block(
-                        typeof(object), 
-                        nonLastStatements.Concat(new[] { Expression.Convert(lastStatement, typeof(object)) }).ToArray()
-                    ), 
+                        typeof(object),
+                        nonLastStatements.Concat(new[] { lastExpr }).ToArray()
+                    ),
                     _envParam
                 );
             });
 
+        static Expression MakeFuncDecl(string id, string[] paramList, Expression body)
+        {
+            // 创建参数表达式数组，使用参数名作为参数表达式名称
+            var parameters = paramList.Select(paramName =>
+                Expression.Parameter(typeof(object), paramName))
+                .ToArray();
+
+            // 创建新的局部变量字典表达式来隔离函数作用域
+            var newEnvMethod = typeof(Script2Environment)
+                .GetMethod(nameof(Script2Environment.CloneWithVariables));
+
+            var newEnvExpr = Expression.Call(_envParam, newEnvMethod!);
+
+            // 为每个参数创建变量赋值
+            var argAssignments = new List<Expression>();
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var variablesExpr = Expression.Property(newEnvExpr, "Variables");
+                var varExpr = Expression.Property(
+                    variablesExpr,
+                    "Item",
+                    Expression.Constant(paramList[i])
+                );
+                argAssignments.Add(Expression.Assign(
+                    varExpr,
+                    parameters[i]
+                ));
+            }
+
+            // 替换 body 中的 _envParam 为 newEnvExpr
+            var envReplacer = new EnvParameterReplacer(newEnvExpr);
+            var newBody = envReplacer.Visit(body);
+
+            // 构建函数体：赋值参数 + 原函数体
+            Expression functionBody;
+            if (newBody.Type != typeof(object))
+            {
+                functionBody = Expression.Convert(newBody, typeof(object));
+            }
+            else
+            {
+                functionBody = newBody;
+            }
+
+            var combinedBody = argAssignments.Count > 0
+                ? Expression.Block(
+                    typeof(object),
+                    argAssignments.Concat(new[] { functionBody }).ToArray()
+                )
+                : functionBody;
+
+            // 创建闭包委托
+            var delegateType = Expression.GetFuncType(
+                parameters.Select(p => typeof(object)).Concat(new[] { typeof(object) }).ToArray()
+            );
+
+            var lambdaExpr = Expression.Lambda(delegateType, combinedBody, parameters);
+
+            // 调用 RegisterFunction 方法注册函数
+            var registerMethod = typeof(Script2Environment)
+                .GetMethod(nameof(Script2Environment.RegisterFunction));
+
+            var lambdaObjExpr = Expression.Convert(lambdaExpr, typeof(Delegate));
+
+            return Expression.Call(
+                _envParam,
+                registerMethod!,
+                Expression.Constant(id),
+                lambdaObjExpr
+            );
+        }
         
         static Expression MakeFuncCall(string fn, Expression[] args)
         {

@@ -12,7 +12,7 @@
         {
             if (!Variables.TryGetValue(varName, out var value))
                 throw new InvalidOperationException($"Variable '{varName}' is not defined.");
-    
+
             return value;
         }
 
@@ -29,8 +29,31 @@
 
             // 统一转换为 float
             var convertedArgs = args.Select(arg => Convert.ChangeType(arg, typeof(float))).ToArray();
-    
+
             return methodInfo.Invoke(null, convertedArgs);
+        }
+
+        /// <summary>
+        /// 注册自定义函数
+        /// </summary>
+        public void RegisterFunction(string name, Delegate func)
+        {
+            Functions[name] = args => func.DynamicInvoke(args);
+        }
+
+        /// <summary>
+        /// 克隆环境并创建新的变量作用域
+        /// </summary>
+        public Script2Environment CloneWithVariables()
+        {
+            var newEnv = new Script2Environment();
+            // 复制函数
+            foreach (var kvp in Functions)
+            {
+                newEnv.Functions[kvp.Key] = kvp.Value;
+            }
+            // 变量字典是独立的，不复制
+            return newEnv;
         }
 
         /// <summary>
