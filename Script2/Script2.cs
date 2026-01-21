@@ -157,7 +157,7 @@ namespace Script2
             .Or(Factor).Named("expression");
 
         public static readonly TokenListParser<Script2Token, Expression> Term1 = 
-            Parse.Chain(Multiply.Or(Divide), Operand, Expression.MakeBinary);
+            Parse.Chain(Multiply.Or(Divide), Operand, MakeBinaryWithConversion);
 
         public static readonly TokenListParser<Script2Token, Expression> Term2 = 
             Parse.Chain(Add.Or(Subtract), Term1, MakeBinaryWithConversion);
@@ -269,11 +269,14 @@ namespace Script2
 
             var newEnvExpr = Expression.Call(_envParam, newEnvMethod!);
 
+            // 声明一个局部变量来存储新的环境对象
+            var newEnvVar = Expression.Variable(typeof(Script2Environment), "newEnv");
+
             // 为每个参数创建变量赋值
             var argAssignments = new List<Expression>();
             for (int i = 0; i < parameters.Length; i++)
             {
-                var variablesExpr = Expression.Property(newEnvExpr, "Variables");
+                var variablesExpr = Expression.Property(newEnvVar, "Variables");
                 var varExpr = Expression.Property(
                     variablesExpr,
                     "Item",
@@ -285,8 +288,8 @@ namespace Script2
                 ));
             }
 
-            // 替换 body 中的 _envParam 为 newEnvExpr
-            var envReplacer = new EnvParameterReplacer(newEnvExpr);
+            // 替换 body 中的 _envParam 为 newEnvVar
+            var envReplacer = new EnvParameterReplacer(newEnvVar);
             var newBody = envReplacer.Visit(body);
 
             // 构建函数体：赋值参数 + 原函数体
@@ -300,12 +303,16 @@ namespace Script2
                 functionBody = newBody;
             }
 
-            var combinedBody = argAssignments.Count > 0
-                ? Expression.Block(
-                    typeof(object),
-                    argAssignments.Concat(new[] { functionBody }).ToArray()
-                )
-                : functionBody;
+            // 构建完整的语句列表：赋值newEnv变量 + 参数赋值 + 函数体
+            var allStatements = new List<Expression>();
+            allStatements.Add(Expression.Assign(newEnvVar, newEnvExpr));
+            allStatements.AddRange(argAssignments);
+            allStatements.Add(functionBody);
+
+            var combinedBody = Expression.Block(
+                new[] { newEnvVar },
+                allStatements.ToArray()
+            );
 
             // 创建闭包委托
             var delegateType = Expression.GetFuncType(
