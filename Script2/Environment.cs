@@ -1,5 +1,12 @@
 ﻿namespace Script2
 {
+    // 特殊的void标记值
+    public class VoidValue
+    {
+        private VoidValue() { }
+        public static readonly VoidValue Instance = new VoidValue();
+    }
+
     public class Script2Environment
     {
         // 根环境，所有子环境共享
@@ -52,24 +59,35 @@
         /// </summary>
         public void SetVariableValue(string varName, object value)
         {
+            // 检查是否为void值
+            if (value is VoidValue)
+            {
+                throw new InvalidOperationException($"Cannot assign void value to variable '{varName}'. Functions that don't return a value cannot be assigned to variables.");
+            }
             _variables[varName] = value;
         }
 
         public object CallFunction(string fn, object[] args)
         {
+            object result;
             if (_functions.TryGetValue(fn, out var func))
             {
-                return func(args);
+                result = func(args);
+            }
+            else
+            {
+                var methodInfo = FindMathMethod(fn, args);
+                if (methodInfo == null)
+                    throw new InvalidOperationException($"Function '{fn}' is not supported.");
+
+                // 统一转换为 float
+                var convertedArgs = args.Select(arg => Convert.ChangeType(arg, typeof(float))).ToArray();
+
+                result = methodInfo.Invoke(null, convertedArgs);
             }
 
-            var methodInfo = FindMathMethod(fn, args);
-            if (methodInfo == null)
-                throw new InvalidOperationException($"Function '{fn}' is not supported.");
-
-            // 统一转换为 float
-            var convertedArgs = args.Select(arg => Convert.ChangeType(arg, typeof(float))).ToArray();
-
-            return methodInfo.Invoke(null, convertedArgs);
+            // 不在这里检查返回值是否为 void，让调用方决定如何处理
+            return result;
         }
 
         /// <summary>

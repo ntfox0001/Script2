@@ -9,9 +9,20 @@ namespace Script2
         // 静态字段：统一的参数
         private static readonly ParameterExpression _envParam = Expression.Parameter(typeof(Script2Environment), "env");
         private static readonly Dictionary<string, Expression> _funcDecls = new();
+        // 标记当前解析的函数是否有return语句
+        // 使用 ThreadLocal 是因为：1) 解析器是静态的，需要在线程间隔离状态；2) ReturnStatement 在解析时需要修改外层 FuncDecl 的状态
+        private static readonly ThreadLocal<bool> _hasReturnInFunction = new(() => false);
 
         /// <summary>
         /// 表达式访问器，用于替换环境参数
+        /// 将全局的 _envParam 替换为函数的局部环境变量 newEnvVar
+        ///
+        /// 为什么 _envParam 有时是 node、有时是 object、有时是 expression？
+        /// - _envParam 本身永远是一个 ParameterExpression（env 参数）
+        /// - 但它出现在表达式树的不同位置：
+        ///   1. VisitMember: node.Expression == _envParam，表示成员访问的宿主对象是 env（如 env.SetVariableValue）
+        ///   2. VisitMethodCall: node.Object == _envParam，表示方法调用的对象是 env（如 env.CallFunction）
+        ///   3. VisitParameter: node == _envParam，表示参数引用本身就是 env（如直接传递 env 参数）
         /// </summary>
         private class EnvParameterReplacer : ExpressionVisitor
         {
@@ -120,7 +131,7 @@ namespace Script2
             from paramList in ParamList.Try()
             from rp in Token.EqualTo(Script2Token.RParen)
             from body in Parse.Ref(() => StatementBlock)
-            select MakeFuncDecl(id.ToStringValue(), paramList, body);
+            select MakeFuncDecl(id.ToStringValue(), paramList, body, _hasReturnInFunction.Value);
         
         public static readonly TokenListParser<Script2Token, Expression> FuncCall = 
             from fn in Token.EqualTo(Script2Token.Identifier)
@@ -181,8 +192,13 @@ namespace Script2
         public static readonly TokenListParser<Script2Token, Expression> IfStatement = 
             Parse.Ref(() => IfStatementImpl);
         
-        public static readonly TokenListParser<Script2Token, Expression> Statement = 
-            SetVar.Or(IfStatement).Or(Expr);
+        public static readonly TokenListParser<Script2Token, Expression> ReturnStatement =
+            from returnKw in Token.EqualTo(Script2Token.Return)
+            from expr in Parse.Ref(() => Expr).OptionalOrDefault(Expression.Constant(null, typeof(object)))
+            select MakeReturnStatement(expr);
+
+        public static readonly TokenListParser<Script2Token, Expression> Statement =
+            SetVar.Or(IfStatement).Or(ReturnStatement).Or(Expr);
 
         public static readonly TokenListParser<Script2Token, Expression> StatementBlock = 
             (from lbrace in Token.EqualTo(Script2Token.LBrace)
@@ -256,8 +272,12 @@ namespace Script2
                 );
             });
 
-        static Expression MakeFuncDecl(string id, string[] paramList, Expression body)
+        static Expression MakeFuncDecl(string id, string[] paramList, Expression body, bool hasReturn)
         {
+            // 保存 hasReturn 标志，然后重置它，以便后续的函数声明可以使用
+            bool functionHasReturn = hasReturn;
+            _hasReturnInFunction.Value = false;
+
             // 创建参数表达式数组，使用参数名作为参数表达式名称
             var parameters = paramList.Select(paramName =>
                 Expression.Parameter(typeof(object), paramName))
@@ -278,7 +298,7 @@ namespace Script2
             {
                 var setVarMethod = typeof(Script2Environment)
                     .GetMethod(nameof(Script2Environment.SetVariableValue));
-                
+
                 argAssignments.Add(Expression.Call(
                     newEnvVar,
                     setVarMethod!,
@@ -293,13 +313,25 @@ namespace Script2
 
             // 构建函数体：赋值参数 + 原函数体
             Expression functionBody;
-            if (newBody.Type != typeof(object))
+
+            if (functionHasReturn)
             {
-                functionBody = Expression.Convert(newBody, typeof(object));
+                // 有return语句，使用实际的return
+                if (newBody.Type != typeof(object))
+                {
+                    functionBody = Expression.Convert(newBody, typeof(object));
+                }
+                else
+                {
+                    functionBody = newBody;
+                }
             }
             else
             {
-                functionBody = newBody;
+                // 没有return语句，返回void标记值
+                var voidField = typeof(VoidValue).GetField("Instance");
+                var voidValue = Expression.Field(null, voidField!);
+                functionBody = voidValue;
             }
 
             // 构建完整的语句列表：赋值newEnv变量 + 参数赋值 + 函数体
@@ -338,28 +370,63 @@ namespace Script2
         {
             var argsArrayExpr = Expression.NewArrayInit(typeof(object),
                 args.Select(arg => Expression.Convert(arg, typeof(object))));
-            
+
             var callMethod = typeof(Script2Environment)
                 .GetMethod(nameof(Script2Environment.CallFunction));
-            
-            return Expression.Call(
+
+            var callExpr = Expression.Call(
                 _envParam,
                 callMethod!,
                 Expression.Constant(fn),
                 argsArrayExpr
             );
+
+            // 明确转换为 object 类型，以确保类型推断正确
+            if (callExpr.Type != typeof(object))
+                return Expression.Convert(callExpr, typeof(object));
+            return callExpr;
         }
         
         private static Expression SetVariable(string varName, Expression value)
         {
+            // 检查是否为 void 表达式（VoidValue.Instance）
+            if (value.NodeType == ExpressionType.MemberAccess &&
+                ((MemberExpression)value).Member.DeclaringType == typeof(VoidValue) &&
+                ((MemberExpression)value).Member.Name == "Instance")
+            {
+                throw new InvalidOperationException($"Cannot assign void value to variable '{varName}'. Functions that don't return a value cannot be assigned to variables.");
+            }
+
+            // 检查值类型是否为 void
+            if (value.Type == typeof(void))
+            {
+                throw new InvalidOperationException($"Cannot assign void value to variable '{varName}'. Functions that don't return a value cannot be assigned to variables.");
+            }
+
             var setVarMethod = typeof(Script2Environment)
                 .GetMethod(nameof(Script2Environment.SetVariableValue));
-            
+
+            Expression valueToAssign;
+            // 如果值已经是 object 类型，直接使用
+            if (value.Type == typeof(object))
+                valueToAssign = value;
+            else
+            {
+                try
+                {
+                    valueToAssign = Expression.Convert(value, typeof(object));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new InvalidOperationException($"Cannot assign value to variable '{varName}': {ex.Message}", ex);
+                }
+            }
+
             return Expression.Call(
                 _envParam,
                 setVarMethod!,
                 Expression.Constant(varName),
-                Expression.Convert(value, typeof(object))
+                valueToAssign
             );
         }
 
@@ -373,6 +440,41 @@ namespace Script2
                 getVarMethod!,
                 Expression.Constant(varName)
             );
+        }
+
+        // 实现MakeReturnStatement方法
+        static Expression MakeReturnStatement(Expression expr)
+        {
+            // 标记函数有return语句
+            _hasReturnInFunction.Value = true;
+
+            // 如果expr是null，返回null值（不是void）
+            // void只在没有return语句时自动返回
+            if (expr == null ||
+                (expr.NodeType == ExpressionType.Constant &&
+                 ((ConstantExpression)expr).Value == null &&
+                 expr.Type == typeof(object)))
+            {
+                return Expression.Constant(null, typeof(object)); // 明确return null，这是合法的
+            }
+
+            // 检查是否是 MethodCall（GetVariable），如果是标识符名为 "null" 的变量引用，则返回 null 常量
+            if (expr.NodeType == ExpressionType.Call &&
+                ((MethodCallExpression)expr).Method.Name == "GetVariableValue")
+            {
+                var variableName = ((MethodCallExpression)expr).Arguments[0];
+                if (variableName.NodeType == ExpressionType.Constant &&
+                    ((ConstantExpression)variableName).Value is string varName &&
+                    varName == "null")
+                {
+                    return Expression.Constant(null, typeof(object));
+                }
+            }
+
+            // 否则返回表达式值，如果已经是object类型则不转换
+            if (expr.Type == typeof(object))
+                return expr;
+            return Expression.Convert(expr, typeof(object));
         }
 
         // 实现MakeIfStatement方法
@@ -394,14 +496,26 @@ namespace Script2
         {
             if (statements.Length == 0)
                 return Expression.Constant(null, typeof(object));
-    
+
             if (statements.Length == 1)
                 return statements[0];
-    
-            // 返回语句块，最后一个语句作为返回值
+
+            // 检查最后一个语句是否是 void 表达式（表示函数结束）
+            // 在语句块中，return 语句会直接返回值，而不是作为语句块的返回值
             var nonLastStatements = statements.Take(statements.Length - 1);
             var lastStatement = statements.Last();
-    
+
+            // 如果最后一个语句是 void 类型（Block without return），则直接执行所有语句并返回 null
+            if (lastStatement.NodeType == ExpressionType.MemberAccess &&
+                ((MemberExpression)lastStatement).Member.DeclaringType == typeof(VoidValue) &&
+                ((MemberExpression)lastStatement).Member.Name == "Instance")
+            {
+                // 这是一个 void 函数，执行所有语句并返回 void
+                return Expression.Block(
+                    statements.Concat(new[] { lastStatement }).ToArray()
+                );
+            }
+
             return Expression.Block(
                 typeof(object),
                 nonLastStatements.Concat(new[] { Expression.Convert(lastStatement, typeof(object)) }).ToArray()

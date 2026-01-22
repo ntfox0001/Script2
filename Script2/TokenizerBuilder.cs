@@ -45,6 +45,7 @@ namespace Script2
                 
                 ["if"] = Script2Token.If,
                 ["else"] = Script2Token.Else,
+                ["return"] = Script2Token.Return,
                 
                 ["wait"] = Script2Token.Wait,
                 
