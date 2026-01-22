@@ -33,6 +33,12 @@ namespace Script2
                 _newEnv = newEnv;
             }
 
+            /// <summary>
+            /// 处理成员访问表达式（如 env.SomeProperty）
+            /// 示例：
+            ///   原始表达式: env.Variables
+            ///   替换后:    newEnvVar.Variables
+            /// </summary>
             protected override Expression VisitMember(MemberExpression node)
             {
                 if (node.Expression == _envParam)
@@ -42,6 +48,12 @@ namespace Script2
                 return base.VisitMember(node);
             }
 
+            /// <summary>
+            /// 处理方法调用表达式（如 env.Method(args)）
+            /// 示例：
+            ///   原始表达式: env.SetVariableValue("x", 123)
+            ///   替换后:    newEnvVar.SetVariableValue("x", 123)
+            /// </summary>
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {
                 if (node.Object == _envParam)
@@ -52,6 +64,12 @@ namespace Script2
                 return base.VisitMethodCall(node);
             }
 
+            /// <summary>
+            /// 处理参数表达式（直接引用参数本身）
+            /// 示例：
+            ///   原始表达式: env（作为参数传递给其他函数）
+            ///   替换后:    newEnvVar
+            /// </summary>
             protected override Expression VisitParameter(ParameterExpression node)
             {
                 if (node == _envParam)
