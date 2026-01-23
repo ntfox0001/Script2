@@ -13,7 +13,7 @@ public class Script2ExtenalFuncTest
         var r = Script2Parser.Execute("Test1(9, 81)", env);
         Assert.That(r, Is.EqualTo(90f));
     }
-    
+
     [Test]
     public void TestMaxFunc2()
     {
@@ -22,7 +22,7 @@ public class Script2ExtenalFuncTest
         var r = Script2Parser.Execute("Test1(9, 81)", env);
         Assert.That(r, Is.EqualTo(90f));
     }
-    
+
     [Test]
     public void TestMaxFunc3()
     {
@@ -40,7 +40,7 @@ else {
         var r = Script2Parser.Execute(s, env);
         Assert.That(r, Is.EqualTo(5));
     }
-    
+
     [Test]
     public void TestMaxFunc4()
     {

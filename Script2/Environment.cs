@@ -10,13 +10,13 @@
     public class Script2Environment
     {
         // 根环境，所有子环境共享
-        private Script2Environment _rootEnv = null;
-        
+        private readonly Script2Environment _rootEnv = null;
+
         // 变量字典（当前环境的本地变量）
-        private Dictionary<string, object> _variables = new();
+        private readonly Dictionary<string, object> _variables = new();
 
         // 函数字典（根环境拥有，子环境共享）
-        private Dictionary<string, Func<object[], object>> _functions = new();
+        private readonly Dictionary<string, Func<object[], object>> _functions = new();
 
         /// <summary>
         /// 构造函数 - 创建根环境
