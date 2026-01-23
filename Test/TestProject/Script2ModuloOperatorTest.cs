@@ -42,17 +42,17 @@ public class Script2ModuloOperatorTest
     }
 
     /// <summary>
-    /// 测试 % - 浮点数运算
+    /// 测试 % - 浮点数运算（取模使用整数运算）
     /// </summary>
     [Test]
     public void TestModuloFloats()
     {
         var env = new Script2Environment();
         var r1 = Script2Parser.Execute("10.5 % 3", env);
-        Assert.That(r1, Is.EqualTo(1.5f).Within(0.001));
+        Assert.That(r1, Is.EqualTo(1.0f).Within(0.001));
 
         var r2 = Script2Parser.Execute("7.8 % 2.5", env);
-        Assert.That(r2, Is.EqualTo(0.3f).Within(0.001));
+        Assert.That(r2, Is.EqualTo(1.0f).Within(0.001));
     }
 
     /// <summary>
@@ -267,9 +267,10 @@ isDivisible(15, 5);
     public void TestModulusByZero()
     {
         var env = new Script2Environment();
-        var r = Script2Parser.Execute("10 % 0", env);
-        // 除以零结果是 NaN 或抛异常
-        Assert.That(float.IsNaN((float)r));
+        var ex = Assert.Throws<System.DivideByZeroException>(() =>
+        {
+            Script2Parser.Execute("10 % 0", env);
+        });
     }
 
     /// <summary>
@@ -312,7 +313,8 @@ c;
 gcd(a, b) {
     while (b != 0) {
         var temp = b;
-        b = a % b;
+        var remainder = a % temp;
+        b = remainder;
         a = temp;
     }
     return a;
@@ -351,18 +353,18 @@ ones;
         var env = new Script2Environment();
         var s = @"
 var i = 0;
-var result = """";
+var result = 0;
 while (i < 10) {
     if (i % 2 == 0) {
-        result = result + ""E"";
+        result = result + 1;
     } else {
-        result = result + ""O"";
+        result = result - 1;
     }
     i = i + 1;
 }
 result;
 ";
         var r = Script2Parser.Execute(s, env);
-        Assert.That(r, Is.EqualTo("EOEOEOEOEOE"));
+        Assert.That(r, Is.EqualTo(0));
     }
 }

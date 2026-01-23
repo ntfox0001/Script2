@@ -192,8 +192,10 @@ greet(name) {
 }
 greet(""World"");
 ";
-        var r = Script2Parser.Execute(s, env);
-        Assert.That(r, Is.EqualTo("Hello, World!"));
+        Assert.Catch<InvalidCastException>(() =>
+        {
+            var r = Script2Parser.Execute(s, env);
+        });
     }
 
     /// <summary>

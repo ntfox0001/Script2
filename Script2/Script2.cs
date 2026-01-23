@@ -201,15 +201,16 @@ namespace Script2
             .Or(GetVar)    // 再匹配变量引用
             .Or(Constant);
 
+        public static readonly TokenListParser<Script2Token, Expression> NotFactor =
+            from notOp in Token.EqualTo(Script2Token.Not)
+            from factor in Factor.Or(Parse.Ref(() => NotFactor))
+            select (Expression)Expression.Not(Expression.Convert(factor, typeof(bool)));
+                
         public static readonly TokenListParser<Script2Token, Expression> Operand =
             (from sign in Token.EqualTo(Script2Token.Minus)
                 from factor in Factor
                 select (Expression)Expression.Negate(factor))
-            .Or(
-                from notOp in Token.EqualTo(Script2Token.Not)
-                from factor in Factor
-                select (Expression)Expression.Not(Expression.Convert(factor, typeof(bool)))
-            )
+            .Or(NotFactor)
             .Or(Factor).Named("expression");
 
         public static readonly TokenListParser<Script2Token, Expression> Term1 =
@@ -730,10 +731,23 @@ namespace Script2
         
         private static Expression MakeBinaryWithConversion(ExpressionType binaryType, Expression left, Expression right)
         {
-            // 统一转换为 decimal 进行运算
-            Expression convertedLeft = Expression.Convert(left, typeof(float));
-            Expression convertedRight = Expression.Convert(right, typeof(float));
-            return Expression.MakeBinary(binaryType, convertedLeft, convertedRight);
+            // 对于取模运算，使用整数运算
+            if (binaryType == ExpressionType.Modulo)
+            {
+                // 先转换为 float（因为值可能是 object 类型），再转换为 int
+                Expression leftAsFloat = left.Type == typeof(float) ? left : Expression.Convert(left, typeof(float));
+                Expression rightAsFloat = right.Type == typeof(float) ? right : Expression.Convert(right, typeof(float));
+                Expression convertedLeft = Expression.Convert(leftAsFloat, typeof(int));
+                Expression convertedRight = Expression.Convert(rightAsFloat, typeof(int));
+                var intResult = Expression.MakeBinary(binaryType, convertedLeft, convertedRight);
+                // 将整数结果转回 float
+                return Expression.Convert(intResult, typeof(float));
+            }
+
+            // 统一转换为 float 进行其他运算
+            Expression convertedLeftFloat = Expression.Convert(left, typeof(float));
+            Expression convertedRightFloat = Expression.Convert(right, typeof(float));
+            return Expression.MakeBinary(binaryType, convertedLeftFloat, convertedRightFloat);
         }
         
         private static Expression MakeComparison(ExpressionType comparisonType, Expression left, Expression right)
@@ -741,20 +755,110 @@ namespace Script2
             // 检查左右操作数的类型
             var leftType = left.Type;
             var rightType = right.Type;
-    
+
+            // 对于相等和不等运算符，要求类型必须相同
+            if (comparisonType == ExpressionType.Equal || comparisonType == ExpressionType.NotEqual)
+            {
+                // 如果类型不同，检查是否有一个是 object 类型（可能是函数参数）
+                if (leftType != rightType)
+                {
+                    // 如果左操作数是 object 类型，尝试转换为右操作数的类型
+                    if (leftType == typeof(object))
+                    {
+                        try
+                        {
+                            var convertedLeft = Expression.Convert(left, rightType);
+                            return MakeComparisonWithSameTypes(comparisonType, convertedLeft, right);
+                        }
+                        catch
+                        {
+                            // 转换失败，再尝试转换为字符串
+                            var stringLeft = Expression.Call(left, "ToString", Type.EmptyTypes);
+                            return Expression.MakeBinary(comparisonType, stringLeft, right);
+                        }
+                    }
+
+                    // 如果右操作数是 object 类型，尝试转换为左操作数的类型
+                    if (rightType == typeof(object))
+                    {
+                        try
+                        {
+                            var convertedRight = Expression.Convert(right, leftType);
+                            return MakeComparisonWithSameTypes(comparisonType, left, convertedRight);
+                        }
+                        catch
+                        {
+                            // 转换失败，再尝试转换为字符串
+                            var stringRight = Expression.Call(right, "ToString", Type.EmptyTypes);
+                            return Expression.MakeBinary(comparisonType, left, stringRight);
+                        }
+                    }
+
+                    // 两个都是具体类型且不相同，抛出类型不匹配错误
+                    throw new InvalidOperationException(
+                        $"Type mismatch in '{comparisonType}' comparison: cannot compare {leftType.Name} with {rightType.Name}. " +
+                        "Logical equality (==) and inequality (!=) operations require both operands to be of the same type.");
+                }
+            }
+
+            // 处理类型相同或非相等/不等运算符的情况
+            return MakeComparisonWithSameTypes(comparisonType, left, right);
+        }
+
+        private static Expression MakeComparisonWithSameTypes(ExpressionType comparisonType, Expression left, Expression right)
+        {
+            var leftType = left.Type;
+            var rightType = right.Type;
+
             // 如果都是float类型，直接比较数值
             if (leftType == typeof(float) && rightType == typeof(float))
             {
                 return Expression.MakeBinary(comparisonType, left, right);
             }
-    
+
             // 如果都是字符串类型，直接比较字符串
             if (leftType == typeof(string) && rightType == typeof(string))
             {
                 return Expression.MakeBinary(comparisonType, left, right);
             }
-    
-            // 尝试将非float类型转换为float进行比较
+
+            // 如果都是bool类型，直接比较布尔值
+            if (leftType == typeof(bool) && rightType == typeof(bool))
+            {
+                return Expression.MakeBinary(comparisonType, left, right);
+            }
+
+            // 如果其中一个或两个是object类型，尝试转换
+            if (leftType == typeof(object) || rightType == typeof(object))
+            {
+                // 对于相等和不等运算符，两个都是object时转换为string比较
+                if (comparisonType == ExpressionType.Equal || comparisonType == ExpressionType.NotEqual)
+                {
+                    // 两个都是object，无法在编译时确定类型
+                    // 需要在运行时检查类型是否匹配
+                    if (leftType == typeof(object) && rightType == typeof(object))
+                    {
+                        return MakeObjectComparisonWithRuntimeTypeCheck(comparisonType, left, right);
+                    }
+
+                    // 只有一个是object，转换为另一个的类型
+                    Expression convertedLeft = left;
+                    Expression convertedRight = right;
+
+                    if (leftType == typeof(object) && rightType != typeof(object))
+                    {
+                        convertedLeft = Expression.Convert(left, rightType);
+                    }
+                    else if (rightType == typeof(object) && leftType != typeof(object))
+                    {
+                        convertedRight = Expression.Convert(right, leftType);
+                    }
+
+                    return Expression.MakeBinary(comparisonType, convertedLeft, convertedRight);
+                }
+            }
+
+            // 尝试将非float类型转换为float进行比较（仅用于非==和!=的比较运算符）
             try
             {
                 Expression convertedLeft = leftType == typeof(float) ? left : Expression.Convert(left, typeof(float));
@@ -768,6 +872,26 @@ namespace Script2
                 var stringRight = rightType == typeof(string) ? right : Expression.Call(right, "ToString", Type.EmptyTypes);
                 return Expression.MakeBinary(comparisonType, stringLeft, stringRight);
             }
+        }
+
+        /// <summary>
+        /// 对两个 object 类型的值进行比较，并在运行时检查类型是否匹配
+        /// </summary>
+        private static Expression MakeObjectComparisonWithRuntimeTypeCheck(ExpressionType comparisonType, Expression left, Expression right)
+        {
+            // 获取运行时类型检查方法
+            var typeCheckMethod = typeof(Script2Environment)
+                .GetMethod(nameof(Script2Environment.CheckTypesForEquality));
+
+            var typeCheckCall = Expression.Call(typeCheckMethod, left, right);
+
+            // 如果类型检查通过，则进行字符串比较
+            var stringLeft = Expression.Call(left, "ToString", Type.EmptyTypes);
+            var stringRight = Expression.Call(right, "ToString", Type.EmptyTypes);
+            var comparisonExpr = Expression.MakeBinary(comparisonType, stringLeft, stringRight);
+
+            // 先进行类型检查，再进行比较
+            return Expression.Block(typeCheckCall, comparisonExpr);
         }
         
         private static Expression MakeLogical(ExpressionType logicalType, Expression left, Expression right)

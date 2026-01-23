@@ -29,4 +29,16 @@ public class Script2StringTest
         var r = Script2Parser.Execute(s, env);
         Assert.That(env.GetVariableValue("a"), Is.EqualTo("eee"));
     }
+    
+    [Test]
+    public void TestString3()
+    {
+        var env = new Script2Environment();
+        var s = @"
+    var a= ""eee""
+    a = ""dd""
+    ";
+        var r = Script2Parser.Execute(s, env);
+        Assert.That(env.GetVariableValue("a"), Is.EqualTo("dd"));
+    }
 }

@@ -145,7 +145,7 @@ counter;
     }
 
     /// <summary>
-    /// 测试 != - 在函数中使用
+    /// 测试 != - 在函数中使用（函数参数是 object 类型）
     /// </summary>
     [Test]
     public void TestNotEqualInFunction()
@@ -158,6 +158,79 @@ isNotZero(n) {
 isNotZero(5);
 ";
         var r = Script2Parser.Execute(s, env);
+        // 函数参数 n 是 object 类型，应该能自动转换为 float 与 0 比较
+        Assert.That(r, Is.EqualTo(true));
+    }
+
+    /// <summary>
+    /// 测试 != - 函数参数为 object 类型与字符串比较
+    /// </summary>
+    [Test]
+    public void TestNotEqualFunctionParamWithObjectToString()
+    {
+        var env = new Script2Environment();
+        var s = @"
+isNotHello(str) {
+    return str != ""hello"";
+}
+isNotHello(""world"");
+";
+        var r = Script2Parser.Execute(s, env);
+        // 函数参数 str 是 object 类型，应该能自动转换为 string 与 "hello" 比较
+        Assert.That(r, Is.EqualTo(true));
+    }
+
+    /// <summary>
+    /// 测试 != - 函数参数为 object 类型与布尔值比较
+    /// </summary>
+    [Test]
+    public void TestNotEqualFunctionParamWithObjectToBoolean()
+    {
+        var env = new Script2Environment();
+        var s = @"
+isNotFalse(b) {
+    return b != false;
+}
+isNotFalse(true);
+";
+        var r = Script2Parser.Execute(s, env);
+        // 函数参数 b 是 object 类型，应该能自动转换为 bool 与 false 比较
+        Assert.That(r, Is.EqualTo(true));
+    }
+
+    /// <summary>
+    /// 测试 == - 函数参数为 object 类型与数字比较
+    /// </summary>
+    [Test]
+    public void TestEqualFunctionParamWithObjectToNumber()
+    {
+        var env = new Script2Environment();
+        var s = @"
+isFive(n) {
+    return n == 5;
+}
+isFive(5);
+";
+        var r = Script2Parser.Execute(s, env);
+        // 函数参数 n 是 object 类型，应该能自动转换为 float 与 5 比较
+        Assert.That(r, Is.EqualTo(true));
+    }
+
+    /// <summary>
+    /// 测试 == - 函数参数为 object 类型与字符串比较
+    /// </summary>
+    [Test]
+    public void TestEqualFunctionParamWithObjectToString()
+    {
+        var env = new Script2Environment();
+        var s = @"
+isHello(str) {
+    return str == ""hello"";
+}
+isHello(""hello"");
+";
+        var r = Script2Parser.Execute(s, env);
+        // 函数参数 str 是 object 类型，应该能自动转换为 string 与 "hello" 比较
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -191,7 +264,8 @@ isNotZero(5);
     {
         var env = new Script2Environment();
         var r = Script2Parser.Execute("not (5 != 5)", env);
-        Assert.That(r, Is.EqualTo(false));
+        // 5 != 5 返回 false，not false 返回 true
+        Assert.That(r, Is.EqualTo(true));
     }
 
     /// <summary>
@@ -243,7 +317,7 @@ x;
     }
 
     /// <summary>
-    /// 测试 != - 字符串和数字比较
+    /// 测试 != - 字符串和数字比较应该报错
     /// </summary>
     [Test]
     public void TestNotEqualStringVsNumber()
@@ -254,9 +328,12 @@ var str = ""5"";
 var num = 5;
 str != num;
 ";
-        var r = Script2Parser.Execute(s, env);
-        // 字符串 "5" 和数字 5 类型不同，应该不相等
-        Assert.That(r, Is.EqualTo(true));
+        // 字符串 "5" 和数字 5 类型不同，应该抛出类型不匹配错误
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+        {
+            Script2Parser.Execute(s, env);
+        });
+        Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
     /// <summary>

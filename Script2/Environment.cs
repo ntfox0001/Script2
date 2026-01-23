@@ -90,7 +90,15 @@
             object result;
             if (_functions.TryGetValue(fn, out var func))
             {
-                result = func(args);
+                try
+                {
+                    result = func(args);
+                }
+                catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null)
+                {
+                    // 解包内部异常，让调用者能看到原始异常
+                    throw tie.InnerException;
+                }
             }
             else
             {
@@ -106,6 +114,44 @@
 
             // 不在这里检查返回值是否为 void，让调用方决定如何处理
             return result;
+        }
+
+        /// <summary>
+        /// 检查两个值是否可以进行相等性比较
+        /// </summary>
+        public static void CheckTypesForEquality(object left, object right)
+        {
+            if (left == null && right == null)
+                return;
+
+            if (left == null || right == null)
+                throw new InvalidOperationException(
+                    $"Type mismatch: cannot compare null with {right ?? left}");
+
+            Type leftType = left.GetType();
+            Type rightType = right.GetType();
+
+            // 检查类型是否匹配
+            bool typesMatch = (leftType == rightType) ||
+                             (leftType == typeof(float) && rightType == typeof(float)) ||
+                             (leftType == typeof(string) && rightType == typeof(string)) ||
+                             (leftType == typeof(bool) && rightType == typeof(bool));
+
+            if (!typesMatch)
+            {
+                // 将类型名称统一为常见名称
+                string GetTypeName(Type t)
+                {
+                    if (t == typeof(float)) return "float";
+                    if (t == typeof(string)) return "string";
+                    if (t == typeof(bool)) return "bool";
+                    return t.Name;
+                }
+
+                throw new InvalidOperationException(
+                    $"Type mismatch: cannot compare {GetTypeName(leftType)} with {GetTypeName(rightType)}. " +
+                    "Logical equality (==) and inequality (!=) operations require both operands to be of the same type.");
+            }
         }
 
         /// <summary>
