@@ -123,7 +123,15 @@ namespace Script2
                 .Select(n => (Expression)Expression.Constant(float.Parse(n.ToStringValue())))
                 .Or(
                     Token.EqualTo(Script2Token.String)
-                        .Select(s => (Expression)Expression.Constant(s.ToStringValue()))
+                        .Select(s => {
+                            // 去掉字符串两端的引号
+                            var strValue = s.ToStringValue();
+                            if (strValue.Length >= 2 && strValue.StartsWith('"') && strValue.EndsWith('"'))
+                            {
+                                strValue = strValue.Substring(1, strValue.Length - 2);
+                            }
+                            return (Expression)Expression.Constant(strValue);
+                        })
                 )
                 .Or(
                     Token.EqualTo(Script2Token.True)
