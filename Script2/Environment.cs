@@ -7,6 +7,17 @@
         public static readonly VoidValue Instance = new VoidValue();
     }
 
+    // 用于实现 return 语句的提前返回异常
+    public class ReturnValueException : Exception
+    {
+        public object ReturnValue { get; }
+
+        public ReturnValueException(object returnValue)
+        {
+            ReturnValue = returnValue;
+        }
+    }
+
     public class Script2Environment
     {
         // 根环境，所有子环境共享

@@ -260,40 +260,56 @@ namespace Script2
                     return Expression.Lambda<Func<Script2Environment, object>>(
                         Expression.Constant(null), _envParam);
 
-                // 如果只有一个语句，直接返回（转换为 object 类型）
+                // 构建执行语句块
+                Expression body;
                 if (statements.Length == 1)
                 {
-                    var stmt = statements[0];
-                    // 如果是 void 类型，执行它并返回 null
-                    if (stmt.Type == typeof(void))
-                        return Expression.Lambda<Func<Script2Environment, object>>(
-                            Expression.Block(
-                                typeof(object),
-                                stmt,
-                                Expression.Constant(null, typeof(object))
-                            ),
-                            _envParam);
-                    return Expression.Lambda<Func<Script2Environment, object>>(
-                        Expression.Convert(stmt, typeof(object)),
-                        _envParam);
+                    body = statements[0];
+                }
+                else
+                {
+                    // 如果有多个语句，创建一个块表达式
+                    var nonLastStatements = statements.Take(statements.Length - 1);
+                    var lastStatement = statements.Last();
+                    body = Expression.Block(
+                        nonLastStatements.Concat(new[] { lastStatement }).ToArray()
+                    );
                 }
 
-                // 如果有多个语句，创建一个块表达式
-                var nonLastStatements = statements.Take(statements.Length - 1);
-                var lastStatement = statements.Last();
+                // 包装在 try-catch 中以捕获 ReturnValueException（脚本级别的 return）
+                var returnValueVar = Expression.Variable(typeof(object), "returnValue");
+                var exceptionVar = Expression.Variable(typeof(ReturnValueException), "ex");
 
-                // 如果最后一个语句是 void 类型，执行它并返回 null
-                Expression lastExpr;
-                if (lastStatement.Type == typeof(void))
-                    lastExpr = Expression.Constant(null, typeof(object));
+                // 构建赋值表达式，处理 void 类型
+                Expression assignExpr;
+                if (body.Type == typeof(void))
+                {
+                    assignExpr = Expression.Block(
+                        body,
+                        Expression.Assign(returnValueVar, Expression.Constant(null, typeof(object)))
+                    );
+                }
                 else
-                    lastExpr = Expression.Convert(lastStatement, typeof(object));
+                {
+                    assignExpr = Expression.Assign(returnValueVar, Expression.Convert(body, typeof(object)));
+                }
+
+                var tryCatch = Expression.TryCatch(
+                    Expression.Block(
+                        assignExpr,
+                        returnValueVar
+                    ),
+                    Expression.Catch(
+                        exceptionVar,
+                        Expression.Block(
+                            Expression.Assign(returnValueVar, Expression.Property(exceptionVar, "ReturnValue")),
+                            returnValueVar
+                        )
+                    )
+                );
 
                 return Expression.Lambda<Func<Script2Environment, object>>(
-                    Expression.Block(
-                        typeof(object),
-                        nonLastStatements.Concat(new[] { lastExpr }).ToArray()
-                    ),
+                    Expression.Block(typeof(object), new[] { returnValueVar }, tryCatch),
                     _envParam
                 );
             });
@@ -342,15 +358,25 @@ namespace Script2
 
             if (functionHasReturn)
             {
-                // 有return语句，使用实际的return
-                if (newBody.Type != typeof(object))
-                {
-                    functionBody = Expression.Convert(newBody, typeof(object));
-                }
-                else
-                {
-                    functionBody = newBody;
-                }
+                // 有return语句，使用 try-catch 捕获 ReturnValueException
+                var returnValueVar = Expression.Variable(typeof(object), "returnValue");
+                var exceptionVar = Expression.Variable(typeof(ReturnValueException), "ex");
+
+                var tryCatch = Expression.TryCatch(
+                    Expression.Block(
+                        Expression.Assign(returnValueVar, Expression.Convert(newBody, typeof(object))),
+                        returnValueVar
+                    ),
+                    Expression.Catch(
+                        exceptionVar,
+                        Expression.Block(
+                            Expression.Assign(returnValueVar, Expression.Property(exceptionVar, "ReturnValue")),
+                            returnValueVar
+                        )
+                    )
+                );
+
+                functionBody = Expression.Block(typeof(object), new[] { returnValueVar }, tryCatch);
             }
             else
             {
@@ -474,18 +500,16 @@ namespace Script2
             // 标记函数有return语句
             _hasReturnInFunction.Value = true;
 
-            // 如果expr是null，返回null值（不是void）
-            // void只在没有return语句时自动返回
+            // 处理返回值表达式
+            Expression returnValueExpr;
             if (expr == null ||
                 (expr.NodeType == ExpressionType.Constant &&
                  ((ConstantExpression)expr).Value == null &&
                  expr.Type == typeof(object)))
             {
-                return Expression.Constant(null, typeof(object)); // 明确return null，这是合法的
+                returnValueExpr = Expression.Constant(null, typeof(object));
             }
-
-            // 检查是否是 MethodCall（GetVariable），如果是标识符名为 "null" 的变量引用，则返回 null 常量
-            if (expr.NodeType == ExpressionType.Call &&
+            else if (expr.NodeType == ExpressionType.Call &&
                 ((MethodCallExpression)expr).Method.Name == "GetVariableValue")
             {
                 var variableName = ((MethodCallExpression)expr).Arguments[0];
@@ -493,14 +517,26 @@ namespace Script2
                     ((ConstantExpression)variableName).Value is string varName &&
                     varName == "null")
                 {
-                    return Expression.Constant(null, typeof(object));
+                    returnValueExpr = Expression.Constant(null, typeof(object));
+                }
+                else
+                {
+                    returnValueExpr = expr.Type == typeof(object) ? expr : Expression.Convert(expr, typeof(object));
                 }
             }
+            else
+            {
+                returnValueExpr = expr.Type == typeof(object) ? expr : Expression.Convert(expr, typeof(object));
+            }
 
-            // 否则返回表达式值，如果已经是object类型则不转换
-            if (expr.Type == typeof(object))
-                return expr;
-            return Expression.Convert(expr, typeof(object));
+            // 抛出 ReturnValueException 实现提前返回
+            var exceptionCtor = typeof(ReturnValueException).GetConstructor(new[] { typeof(object) });
+            var throwExpr = Expression.Throw(
+                Expression.New(exceptionCtor, returnValueExpr),
+                typeof(object)
+            );
+
+            return throwExpr;
         }
 
         // 实现MakeIfStatement方法
@@ -508,13 +544,42 @@ namespace Script2
         {
             // 将条件转换为bool类型
             var conditionAsBool = Expression.Convert(condition, typeof(bool));
-    
+
+            // 处理 thenBranch 的类型
+            Expression thenExpr = thenBranch;
+            if (thenBranch.Type == typeof(void))
+            {
+                thenExpr = Expression.Block(
+                    thenBranch,
+                    Expression.Constant(null, typeof(object))
+                );
+            }
+            else if (thenBranch.Type != typeof(object))
+            {
+                thenExpr = Expression.Convert(thenBranch, typeof(object));
+            }
+
             // 如果有else分支
             if (elseBranch != null)
-                return Expression.Condition(conditionAsBool, thenBranch, elseBranch);
+            {
+                // 处理 elseBranch 的类型
+                Expression elseExpr = elseBranch;
+                if (elseBranch.Type == typeof(void))
+                {
+                    elseExpr = Expression.Block(
+                        elseBranch,
+                        Expression.Constant(null, typeof(object))
+                    );
+                }
+                else if (elseBranch.Type != typeof(object))
+                {
+                    elseExpr = Expression.Convert(elseBranch, typeof(object));
+                }
+                return Expression.Condition(conditionAsBool, thenExpr, elseExpr);
+            }
             else
                 // 没有else分支，返回默认值null
-                return Expression.Condition(conditionAsBool, thenBranch, Expression.Constant(null, typeof(object)));
+                return Expression.Condition(conditionAsBool, thenExpr, Expression.Constant(null, typeof(object)));
         }
 
         // 实现MakeStatementBlock方法
