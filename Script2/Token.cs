@@ -19,6 +19,8 @@ namespace Script2
         If,
         [Token(Category = "keyword", Example = "else")]
         Else,
+        [Token(Category = "keyword", Example = "while")]
+        While,
         [Token(Category = "keyword", Example = "return")]
         Return,
         [Token(Category = "keyword", Example = "true")]

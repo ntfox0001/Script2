@@ -173,6 +173,12 @@ namespace Script2
             from value in Parse.Ref(() => Expr)
             select SetVariable(varName.ToStringValue(), value);
 
+        public static readonly TokenListParser<Script2Token, Expression> ReassignVar =
+            from varName in Token.EqualTo(Script2Token.Identifier)
+            from eq in Token.EqualTo(Script2Token.Equals)
+            from value in Parse.Ref(() => Expr)
+            select ReassignVariable(varName.ToStringValue(), value);
+
         public static readonly TokenListParser<Script2Token, Expression> GetVar = 
             from varName in Token.EqualTo(Script2Token.Identifier)
             select GetVariable(varName.ToStringValue());
@@ -217,14 +223,17 @@ namespace Script2
         
         public static readonly TokenListParser<Script2Token, Expression> IfStatement = 
             Parse.Ref(() => IfStatementImpl);
-        
+
+        public static readonly TokenListParser<Script2Token, Expression> WhileStatement =
+            Parse.Ref(() => WhileStatementImpl);
+
         public static readonly TokenListParser<Script2Token, Expression> ReturnStatement =
             from returnKw in Token.EqualTo(Script2Token.Return)
             from expr in Parse.Ref(() => Expr).OptionalOrDefault(Expression.Constant(null, typeof(object)))
             select MakeReturnStatement(expr);
 
         public static readonly TokenListParser<Script2Token, Expression> Statement =
-            SetVar.Or(IfStatement).Or(ReturnStatement).Or(Expr);
+            SetVar.Or(ReassignVar.Try()).Or(IfStatement).Or(WhileStatement).Or(ReturnStatement).Or(Expr);
 
         public static readonly TokenListParser<Script2Token, Expression> StatementBlock = 
             (from lbrace in Token.EqualTo(Script2Token.LBrace)
@@ -233,7 +242,7 @@ namespace Script2
                 select MakeStatementBlock(statements))
             .Or(Statement);
         
-        public static readonly TokenListParser<Script2Token, Expression> IfStatementImpl = 
+        public static readonly TokenListParser<Script2Token, Expression> IfStatementImpl =
             from ifKeyword in Token.EqualTo(Script2Token.If)
             from lp in Token.EqualTo(Script2Token.LParen)
             from condition in Parse.Ref(() => Expr)
@@ -243,9 +252,17 @@ namespace Script2
                 from elseKw in Token.EqualTo(Script2Token.Else)
                 from elseBlock in Parse.Ref(() => StatementBlock)
                 select elseBlock
-            ).Or(Parse.Return<Script2Token, Expression>(null)) 
+            ).Or(Parse.Return<Script2Token, Expression>(null))
             select MakeIfStatement(condition, thenBranch, elseBranch);
-        
+
+        public static readonly TokenListParser<Script2Token, Expression> WhileStatementImpl =
+            from whileKeyword in Token.EqualTo(Script2Token.While)
+            from lp in Token.EqualTo(Script2Token.LParen)
+            from condition in Parse.Ref(() => Expr)
+            from rp in Token.EqualTo(Script2Token.RParen)
+            from body in Parse.Ref(() => StatementBlock)
+            select MakeWhileStatement(condition, body);
+
         public static readonly TokenListParser<Script2Token, Expression[]> Program = 
             (from stmt in Statement
                 from semicolon in Token.EqualTo(Script2Token.Semicolon).Optional()
@@ -482,6 +499,56 @@ namespace Script2
             );
         }
 
+        private static Expression ReassignVariable(string varName, Expression value)
+        {
+            // 检查是否为 void 表达式（VoidValue.Instance）
+            if (value.NodeType == ExpressionType.MemberAccess &&
+                ((MemberExpression)value).Member.DeclaringType == typeof(VoidValue) &&
+                ((MemberExpression)value).Member.Name == "Instance")
+            {
+                throw new InvalidOperationException($"Cannot assign void value to variable '{varName}'. Functions that don't return a value cannot be assigned to variables.");
+            }
+
+            // 检查值类型是否为 void
+            if (value.Type == typeof(void))
+            {
+                throw new InvalidOperationException($"Cannot assign void value to variable '{varName}'. Functions that don't return a value cannot be assigned to variables.");
+            }
+
+            var setVarMethod = typeof(Script2Environment)
+                .GetMethod(nameof(Script2Environment.SetVariableValue));
+
+            Expression valueToAssign;
+            // 如果值已经是 object 类型，直接使用
+            if (value.Type == typeof(object))
+                valueToAssign = value;
+            else
+            {
+                try
+                {
+                    valueToAssign = Expression.Convert(value, typeof(object));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new InvalidOperationException($"Cannot assign value to variable '{varName}': {ex.Message}", ex);
+                }
+            }
+
+            // 构建赋值表达式：先调用 SetVariableValue，然后返回赋值的值
+            var setVarCall = Expression.Call(
+                _envParam,
+                setVarMethod!,
+                Expression.Constant(varName),
+                valueToAssign
+            );
+
+            // 返回一个块表达式：先执行赋值，然后返回值
+            return Expression.Block(
+                typeof(object),
+                new[] { setVarCall, valueToAssign }
+            );
+        }
+
         private static Expression GetVariable(string varName)
         {
             var getVarMethod = typeof(Script2Environment)
@@ -580,6 +647,41 @@ namespace Script2
             else
                 // 没有else分支，返回默认值null
                 return Expression.Condition(conditionAsBool, thenExpr, Expression.Constant(null, typeof(object)));
+        }
+
+        // 实现MakeWhileStatement方法
+        static Expression MakeWhileStatement(Expression condition, Expression body)
+        {
+            // 将条件转换为bool类型
+            var conditionAsBool = Expression.Convert(condition, typeof(bool));
+
+            // 处理 body 的类型
+            Expression bodyExpr = body;
+            if (body.Type == typeof(void))
+            {
+                bodyExpr = Expression.Block(
+                    body,
+                    Expression.Constant(null, typeof(object))
+                );
+            }
+            else if (body.Type != typeof(object))
+            {
+                bodyExpr = Expression.Convert(body, typeof(object));
+            }
+
+            // 构建while循环：while (condition) { body }
+            // 使用 Expression.Loop 和 Expression.Break
+            var breakLabel = Expression.Label(typeof(object), "whileBreak");
+            var loop = Expression.Loop(
+                Expression.IfThenElse(
+                    conditionAsBool,
+                    bodyExpr,
+                    Expression.Break(breakLabel, Expression.Constant(null, typeof(object)))
+                ),
+                breakLabel
+            );
+
+            return loop;
         }
 
         // 实现MakeStatementBlock方法
