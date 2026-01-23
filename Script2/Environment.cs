@@ -140,14 +140,29 @@
         }
 
         // 单个参数的函数注册（只能在根环境中注册）
-        public void RegisterFunc<TR, T1>(string funcName, Func<T1, TR> func)
+        public void RegisterFunc<TR>(string funcName, Func<TR> func)
         {
             if (_rootEnv != null)
                 throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
             _functions[funcName] = args =>
             {
-                if (args == null || args.Length != 1)
+                if (args is not { Length: 0 })
+                    throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
+                
+                return func();
+            };
+        }
+        
+        // 单个参数的函数注册（只能在根环境中注册）
+        public void RegisterFunc<T1, TR>(string funcName, Func<T1, TR> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args is not { Length: 1 })
                     throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
 
                 var arg = Convertor.ConvertToTargetType<T1>(args[0]);
@@ -156,14 +171,14 @@
         }
 
         // 两个参数的函数注册（只能在根环境中注册）
-        public void RegisterFunc<TR, T1, T2>(string funcName, Func<T1, T2, TR> func)
+        public void RegisterFunc<T1, T2, TR>(string funcName, Func<T1, T2, TR> func)
         {
             if (_rootEnv != null)
                 throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
             _functions[funcName] = args =>
             {
-                if (args == null || args.Length != 2)
+                if (args is not { Length: 2 })
                     throw new InvalidOperationException($"Function '{funcName}' expects 2 arguments.");
 
                 var (arg1, arg2) = Convertor.ConvertToTargetTypes<T1, T2>(args[0], args[1], funcName);
@@ -172,14 +187,14 @@
         }
 
         // 三个参数的函数注册（只能在根环境中注册）
-        public void RegisterFunc<TR, T1, T2, T3>(string funcName, Func<T1, T2, T3, TR> func)
+        public void RegisterFunc<T1, T2, T3, TR>(string funcName, Func<T1, T2, T3, TR> func)
         {
             if (_rootEnv != null)
                 throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
             _functions[funcName] = args =>
             {
-                if (args == null || args.Length != 3)
+                if (args is not { Length: 3 })
                     throw new InvalidOperationException($"Function '{funcName}' expects 3 arguments.");
 
                 var (arg1, arg2, arg3) = Convertor.ConvertToTargetTypes<T1, T2, T3>(args[0], args[1], args[2], funcName);
@@ -188,14 +203,14 @@
         }
 
         // 四个参数的函数注册（只能在根环境中注册）
-        public void RegisterFunc<TR, T1, T2, T3, T4>(string funcName, Func<T1, T2, T3, T4, TR> func)
+        public void RegisterFunc<T1, T2, T3, T4, TR>(string funcName, Func<T1, T2, T3, T4, TR> func)
         {
             if (_rootEnv != null)
                 throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
             _functions[funcName] = args =>
             {
-                if (args == null || args.Length != 4)
+                if (args is not { Length: 4 })
                     throw new InvalidOperationException($"Function '{funcName}' expects 4 arguments.");
 
                 var (arg1, arg2, arg3, arg4) = Convertor.ConvertToTargetTypes<T1, T2, T3, T4>(args[0], args[1], args[2], args[3], funcName);

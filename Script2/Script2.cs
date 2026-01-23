@@ -598,5 +598,11 @@ namespace Script2
             var compiled = lambdaExpr.Compile();
             return compiled(env);  // ← 传入 env
         }
+
+        public static object CallFunc(Script2Environment env, string fn, params object[] args)
+        {
+            var argsStr = string.Join(',', args.Select(arg => arg.ToLowercaseString()));
+            return Execute($"{fn}({argsStr})", env);
+        }
     }
 }
