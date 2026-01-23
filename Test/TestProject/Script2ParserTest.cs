@@ -114,4 +114,84 @@ a
         var r = Script2Parser.Execute(s, env);
         Assert.That(r, Is.EqualTo(6));
     }
+
+    /// <summary>
+    /// 测试逻辑运算符 - and
+    /// </summary>
+    [Test]
+    public void TestLogicalAnd()
+    {
+        var env = new Script2Environment();
+        var s = @"
+if (true and true) {
+    1;
+} else {
+    0;
+}
+";
+        var r = Script2Parser.Execute(s, env);
+        Assert.That(r, Is.EqualTo(1));
+    }
+
+    /// <summary>
+    /// 测试逻辑运算符 - or
+    /// </summary>
+    [Test]
+    public void TestLogicalOr()
+    {
+        var env = new Script2Environment();
+        var s = @"
+if (true or false) {
+    1;
+} else {
+    0;
+}
+";
+        var r = Script2Parser.Execute(s, env);
+        Assert.That(r, Is.EqualTo(1));
+    }
+
+    /// <summary>
+    /// 测试比较运算符
+    /// </summary>
+    [Test]
+    public void TestComparisonOperators()
+    {
+        var env = new Script2Environment();
+        var s = @"
+var a = 5;
+var b = 10;
+a < b;
+";
+        var r = Script2Parser.Execute(s, env);
+        Assert.That(r, Is.EqualTo(true));
+    }
+
+    /// <summary>
+    /// 测试算术运算符优先级
+    /// </summary>
+    [Test]
+    public void TestOperatorPrecedence()
+    {
+        var env = new Script2Environment();
+        var s = @"
+2 + 3 * 4;
+";
+        var r = Script2Parser.Execute(s, env);
+        Assert.That(r, Is.EqualTo(14));
+    }
+
+    /// <summary>
+    /// 测试括号改变优先级
+    /// </summary>
+    [Test]
+    public void TestParentheses()
+    {
+        var env = new Script2Environment();
+        var s = @"
+(2 + 3) * 4;
+";
+        var r = Script2Parser.Execute(s, env);
+        Assert.That(r, Is.EqualTo(20));
+    }
 }

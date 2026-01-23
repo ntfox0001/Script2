@@ -11,7 +11,8 @@ namespace Script2
                 ["-"] = Script2Token.Minus,
                 ["*"] = Script2Token.Times,
                 ["/"] = Script2Token.Divide,
-                
+                ["%"] = Script2Token.Modulo,
+
                 ["="] = Script2Token.Equals,
                 
                 [">"] = Script2Token.Greater,
@@ -31,6 +32,7 @@ namespace Script2
             new()
             {
                 ["=="] = Script2Token.EqualEqual,
+                ["!="] = Script2Token.NotEqual,
                 [">="] = Script2Token.GreaterEqual,
                 ["<="] = Script2Token.LessEqual,
             };
@@ -39,17 +41,18 @@ namespace Script2
             new()
             {
                 ["var"] = Script2Token.Var,
-                
+
                 ["or"] = Script2Token.Or,
                 ["and"] = Script2Token.And,
-                
+                ["not"] = Script2Token.Not,
+
                 ["if"] = Script2Token.If,
                 ["else"] = Script2Token.Else,
                 ["while"] = Script2Token.While,
                 ["return"] = Script2Token.Return,
-                
+
                 ["wait"] = Script2Token.Wait,
-                
+
                 ["true"] = Script2Token.True,
                 ["false"] = Script2Token.False,
             };

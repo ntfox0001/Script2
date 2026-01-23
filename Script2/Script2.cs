@@ -94,7 +94,10 @@ namespace Script2
 
         static readonly TokenListParser<Script2Token, ExpressionType> Divide =
             Operator(Script2Token.Divide, ExpressionType.Divide);
-        
+
+        static readonly TokenListParser<Script2Token, ExpressionType> Modulo =
+            Operator(Script2Token.Modulo, ExpressionType.Modulo);
+
         static readonly TokenListParser<Script2Token, ExpressionType> Greater =
             Operator(Script2Token.Greater, ExpressionType.GreaterThan);
 
@@ -110,11 +113,17 @@ namespace Script2
         static readonly TokenListParser<Script2Token, ExpressionType> EqualEqual =
             Operator(Script2Token.EqualEqual, ExpressionType.Equal);
 
+        static readonly TokenListParser<Script2Token, ExpressionType> NotEqual =
+            Operator(Script2Token.NotEqual, ExpressionType.NotEqual);
+
         static readonly TokenListParser<Script2Token, ExpressionType> And =
             Operator(Script2Token.And, ExpressionType.AndAlso);
 
         static readonly TokenListParser<Script2Token, ExpressionType> Or =
             Operator(Script2Token.Or, ExpressionType.OrElse);
+
+        static readonly TokenListParser<Script2Token, ExpressionType> Not =
+            Operator(Script2Token.Not, ExpressionType.Not);
 
         public static readonly TokenListParser<Script2Token, Expression> Constant =
             Token.EqualTo(Script2Token.Number)
@@ -192,23 +201,28 @@ namespace Script2
             .Or(GetVar)    // 再匹配变量引用
             .Or(Constant);
 
-        public static readonly TokenListParser<Script2Token, Expression> Operand = 
+        public static readonly TokenListParser<Script2Token, Expression> Operand =
             (from sign in Token.EqualTo(Script2Token.Minus)
                 from factor in Factor
                 select (Expression)Expression.Negate(factor))
+            .Or(
+                from notOp in Token.EqualTo(Script2Token.Not)
+                from factor in Factor
+                select (Expression)Expression.Not(Expression.Convert(factor, typeof(bool)))
+            )
             .Or(Factor).Named("expression");
 
-        public static readonly TokenListParser<Script2Token, Expression> Term1 = 
-            Parse.Chain(Multiply.Or(Divide), Operand, MakeBinaryWithConversion);
+        public static readonly TokenListParser<Script2Token, Expression> Term1 =
+            Parse.Chain(Multiply.Or(Divide).Or(Modulo), Operand, MakeBinaryWithConversion);
 
         public static readonly TokenListParser<Script2Token, Expression> Term2 = 
             Parse.Chain(Add.Or(Subtract), Term1, MakeBinaryWithConversion);
         
         // 添加比较表达式
-        public static readonly TokenListParser<Script2Token, Expression> ComparisonExpr = 
+        public static readonly TokenListParser<Script2Token, Expression> ComparisonExpr =
             Parse.Chain(
-                Greater.Or(Less).Or(GreaterEqual).Or(LessEqual).Or(EqualEqual), 
-                Term2, 
+                Greater.Or(Less).Or(GreaterEqual).Or(LessEqual).Or(EqualEqual).Or(NotEqual),
+                Term2,
                 MakeComparison
             );
 

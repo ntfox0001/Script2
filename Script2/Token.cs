@@ -31,6 +31,8 @@ namespace Script2
         And,
         [Token(Category = "keyword", Example = "or")]
         Or,
+        [Token(Category = "keyword", Example = "not")]
+        Not,
         
         [Token(Category = "operator", Example = "+")]
         Plus,
@@ -40,6 +42,8 @@ namespace Script2
         Times,
         [Token(Category = "operator", Example = "/")]
         Divide,
+        [Token(Category = "operator", Example = "%")]
+        Modulo,
         [Token(Category = "operator", Example = "=")]
         Equals,
         
@@ -53,6 +57,8 @@ namespace Script2
         LessEqual,
         [Token(Category = "operator", Example = "==")]
         EqualEqual,
+        [Token(Category = "operator", Example = "!=")]
+        NotEqual,
         
         [Token(Category = "sign", Example = "(")]
         LParen,

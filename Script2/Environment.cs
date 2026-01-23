@@ -35,6 +35,7 @@
         public Script2Environment()
         {
             // 根环境的 _rootEnv 为 null
+            Setup();
         }
 
         /// <summary>
@@ -45,6 +46,12 @@
             _rootEnv = rootEnv;
             _functions = rootEnv._functions; // 共享函数字典
             _variables = new Dictionary<string, object>(); // 独立的本地变量
+        }
+
+        private void Setup()
+        {
+            _variables["PI"] = 3.1415926f;
+            _variables["E"] = 2.71828;
         }
 
         /// <summary>
