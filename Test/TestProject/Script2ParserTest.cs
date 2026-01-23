@@ -27,7 +27,7 @@ var b = Max(3, a)
 b + 2
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(11, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(11));
         }
         /// <summary>
         /// 测试变量声明，函数调用，表达式计算 带有分号
@@ -42,7 +42,7 @@ var b = Max(3, a);
 b + 2;
 ";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(11, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(11));
         }
         /// <summary>
         /// 测试常量带有分号
@@ -53,7 +53,7 @@ b + 2;
             var env = new Script2Environment();
             var s = @"5;";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(5, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(5));
         }
         /// <summary>
         /// 测试常量带有分号
@@ -64,7 +64,7 @@ b + 2;
             var env = new Script2Environment();
             var s = @"5;6";
             var r = Script2Parser.Execute(s, env);
-            Assert.That(6, Is.EqualTo(r));
+            Assert.That(r, Is.EqualTo(6));
         }
         [Test]
         public void TestLambda7()
