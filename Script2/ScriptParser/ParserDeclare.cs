@@ -120,12 +120,11 @@ public class ParserDeclare
             from varName in Token.EqualTo(Script2Token.Identifier)
             select MakeExpression.GetVariable(varName.ToStringValue());
 
-        public static readonly TokenListParser<Script2Token, Expression> Factor = 
+        public static readonly TokenListParser<Script2Token, Expression> Factor =
             (from lparen in Token.EqualTo(Script2Token.LParen)
                 from expr in Parse.Ref(() => Expr)
                 from rparen in Token.EqualTo(Script2Token.RParen)
                 select expr)
-            .Or(FuncDecl).Try()  // 先尝试匹配函数声明
             .Or(FuncCall).Try()  // 先尝试匹配函数调用
             .Or(GetVar)    // 再匹配变量引用
             .Or(Constant);
@@ -178,12 +177,21 @@ public class ParserDeclare
         public static readonly TokenListParser<Script2Token, Expression> Statement =
             SetVar.Or(ReassignVar.Try()).Or(IfStatement).Or(WhileStatement).Or(ReturnStatement).Or(Expr);
 
-        public static readonly TokenListParser<Script2Token, Expression> StatementBlock = 
+        public static readonly TokenListParser<Script2Token, Expression> GlobalStatement =
+            FuncDecl.Try().Or(Statement);
+
+        public static readonly TokenListParser<Script2Token, Expression> StatementBlock =
             (from lbrace in Token.EqualTo(Script2Token.LBrace)
-                from statements in Parse.Ref(() => Program)
+                from statements in Parse.Ref(() => BlockStatements)
                 from rbrace in Token.EqualTo(Script2Token.RBrace)
                 select MakeExpression.MakeStatementBlock(statements))
             .Or(Statement);
+
+        public static readonly TokenListParser<Script2Token, Expression[]> BlockStatements =
+            (from stmt in Statement
+                from semicolon in Token.EqualTo(Script2Token.Semicolon).Optional()
+                select stmt
+            ).Many();
         
         public static readonly TokenListParser<Script2Token, Expression> IfStatementImpl =
             from ifKeyword in Token.EqualTo(Script2Token.If)
@@ -206,8 +214,8 @@ public class ParserDeclare
             from body in Parse.Ref(() => StatementBlock)
             select MakeExpression.MakeWhileStatement(condition, body);
 
-        public static readonly TokenListParser<Script2Token, Expression[]> Program = 
-            (from stmt in Statement
+        public static readonly TokenListParser<Script2Token, Expression[]> Program =
+            (from stmt in GlobalStatement
                 from semicolon in Token.EqualTo(Script2Token.Semicolon).Optional()
                 select stmt
             ).Many();
