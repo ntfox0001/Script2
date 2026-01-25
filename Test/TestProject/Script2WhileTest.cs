@@ -140,4 +140,24 @@ testFunc(5)";
         var r = Script2Parser.Execute(s, env);
         Assert.That(r, Is.EqualTo(15f));
     }
+    
+    [Test, Timeout(5000)]
+    public void TestWhileLoop_CallAction()
+    {
+        var env = new Script2Environment();
+        var s = @"
+testFunc() {
+    var x = 1
+}
+var i = 0
+while(i < 3){
+    testFunc()
+    i = i + 1
+}
+i
+";
+        var r = Script2Parser.Execute(s, env);
+        // i 最终应该是 3
+        Assert.That(r, Is.EqualTo(3f));
+    }
 }
