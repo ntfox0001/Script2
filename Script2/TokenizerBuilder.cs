@@ -2,7 +2,7 @@
 
 namespace Script2
 {
-    public static class TokenizerBuilder
+    internal static class TokenizerBuilder
     {
         private static readonly Dictionary<string, Script2Token> SingleOperators =
             new()

@@ -107,32 +107,6 @@ namespace TestProject
             }
             Assert.That(sample, Is.EqualTo(tokens.Select(x => x.ToStringValue()).ToArray()));
         }
-
-        [Test]
-        public void TestDebugMaxVar()
-        {
-            var s = "5;";
-            var tokens = _tokenizer.Tokenize(s);
-            Console.WriteLine("=== Tokens' ===");
-            for (int i = 0; i < tokens.Count(); i++)
-            {
-                var t = tokens.ElementAt(i);
-                Console.WriteLine($"[{i}] {t.Kind}: '{t.Span.ToStringValue()}'");
-            }
-
-            try
-            {
-                var r = Script2Parser.Factor.Parse(tokens);
-                Console.WriteLine($"=== Success: {r} ===");
-            }
-            catch (ParseException ex)
-            {
-                Console.WriteLine($"=== Error ===");
-                Console.WriteLine($"Message: {ex.Message}");
-                Console.WriteLine($"Position: Line {ex.ErrorPosition.Line}, Column {ex.ErrorPosition.Column}");
-                throw;
-            }
-        }
     }
 
 
