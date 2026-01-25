@@ -1,4 +1,6 @@
-﻿namespace Script2;
+﻿using System.Data;
+
+namespace Script2;
 
 public class Script2Environment
 {
@@ -163,7 +165,10 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[name] = func.DynamicInvoke;
+        if (!_functions.TryAdd(name, func.DynamicInvoke))
+        {
+            throw new DuplicateNameException($"Function already exists: {name}");
+        }
     }
 
     /// <summary>

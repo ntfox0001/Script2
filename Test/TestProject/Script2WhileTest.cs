@@ -147,11 +147,13 @@ testFunc(5)";
         var env = new Script2Environment();
         var s = @"
 testFunc() {
-    var x = 1
+    print(1)
 }
 var i = 0
+
 while(i < 3){
     testFunc()
+    
     i = i + 1
 }
 i
