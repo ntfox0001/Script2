@@ -281,5 +281,89 @@
                 return func(arg1, arg2, arg3, arg4);
             };
         }
+
+        // 无返回值的函数注册 - 0个参数（只能在根环境中注册）
+        public void RegisterFunc(string funcName, Action func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args is not { Length: 0 })
+                    throw new InvalidOperationException($"Function '{funcName}' expects 0 arguments.");
+
+                func();
+                return VoidValue.Instance;
+            };
+        }
+
+        // 无返回值的函数注册 - 1个参数（只能在根环境中注册）
+        public void RegisterFunc<T1>(string funcName, Action<T1> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args is not { Length: 1 })
+                    throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
+
+                var arg = Convertor.ConvertToTargetType<T1>(args[0]);
+                func(arg);
+                return VoidValue.Instance;
+            };
+        }
+
+        // 无返回值的函数注册 - 2个参数（只能在根环境中注册）
+        public void RegisterFunc<T1, T2>(string funcName, Action<T1, T2> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args is not { Length: 2 })
+                    throw new InvalidOperationException($"Function '{funcName}' expects 2 arguments.");
+
+                var (arg1, arg2) = Convertor.ConvertToTargetTypes<T1, T2>(args[0], args[1], funcName);
+                func(arg1, arg2);
+                return VoidValue.Instance;
+            };
+        }
+
+        // 无返回值的函数注册 - 3个参数（只能在根环境中注册）
+        public void RegisterFunc<T1, T2, T3>(string funcName, Action<T1, T2, T3> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args is not { Length: 3 })
+                    throw new InvalidOperationException($"Function '{funcName}' expects 3 arguments.");
+
+                var (arg1, arg2, arg3) = Convertor.ConvertToTargetTypes<T1, T2, T3>(args[0], args[1], args[2], funcName);
+                func(arg1, arg2, arg3);
+                return VoidValue.Instance;
+            };
+        }
+
+        // 无返回值的函数注册 - 4个参数（只能在根环境中注册）
+        public void RegisterFunc<T1, T2, T3, T4>(string funcName, Action<T1, T2, T3, T4> func)
+        {
+            if (_rootEnv != null)
+                throw new InvalidOperationException("Functions can only be registered in the root environment.");
+
+            _functions[funcName] = args =>
+            {
+                if (args is not { Length: 4 })
+                    throw new InvalidOperationException($"Function '{funcName}' expects 4 arguments.");
+
+                var (arg1, arg2, arg3, arg4) = Convertor.ConvertToTargetTypes<T1, T2, T3, T4>(args[0], args[1], args[2], args[3], funcName);
+                func(arg1, arg2, arg3, arg4);
+                return VoidValue.Instance;
+            };
+        }
     }
 }
