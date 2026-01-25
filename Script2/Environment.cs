@@ -34,6 +34,15 @@ public class Script2Environment
     {
         _variables["PI"] = 3.1415926f;
         _variables["E"] = 2.71828;
+
+        // 注册 print 函数（支持多个参数）
+        // 使用 RegisterFunction 而不是 RegisterFunc，因为我们需要直接处理 args 数组
+        _functions["print"] = args =>
+        {
+            var output = string.Join("", args.Select(arg => arg?.ToString() ?? "null"));
+            Console.WriteLine(output);
+            return VoidValue.Instance;
+        };
     }
 
     /// <summary>
