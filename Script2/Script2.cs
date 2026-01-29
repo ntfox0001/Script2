@@ -7,6 +7,11 @@ public class Script2 : IScript2
     {
         return Script2Parser.Execute(expression, _env);
     }
+    
+    public object CallFunc(string fn, params object[] args)
+    {
+        return Script2Parser.CallFunc(_env, fn, args);
+    }
 
     public void RegisterFunc<TR>(string funcName, Func<TR> func)
     {
