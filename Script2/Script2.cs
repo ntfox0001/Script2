@@ -1,25 +1,60 @@
-using System.Linq.Expressions;
-using Script2.ScriptParser;
-using Superpower;
-using Superpower.Parsers;
+﻿namespace Script2;
 
-namespace Script2
+public class Script2 : IScript2
 {
-    public static class Script2Parser
+    private readonly Script2Environment _env = new();
+    public object Execute(string expression)
     {
-        public static object Execute(string expression, Script2Environment env)
-        {
-            var tok = TokenizerBuilder.Build();
-            var tokens = tok.Tokenize(expression);
-            var lambdaExpr = ParserDeclare.Lambda.Parse(tokens);
-            var compiled = lambdaExpr.Compile();
-            return compiled(env);  // ← 传入 env
-        }
+        return Script2Parser.Execute(expression, _env);
+    }
 
-        public static object CallFunc(Script2Environment env, string fn, params object[] args)
-        {
-            var argsStr = string.Join(',', args.Select(arg => arg.ToLowercaseString()));
-            return Execute($"{fn}({argsStr})", env);
-        }
+    public void RegisterFunc<TR>(string funcName, Func<TR> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, TR>(string funcName, Func<T1, TR> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, T2, TR>(string funcName, Func<T1, T2, TR> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, T2, T3, TR>(string funcName, Func<T1, T2, T3, TR> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, T2, T3, T4, TR>(string funcName, Func<T1, T2, T3, T4, TR> func)
+    {
+        _env.RegisterFunc(funcName, func); 
+    }
+
+    public void RegisterFunc(string funcName, Action func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1>(string funcName, Action<T1> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, T2>(string funcName, Action<T1, T2> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, T2, T3>(string funcName, Action<T1, T2, T3> func)
+    {
+        _env.RegisterFunc(funcName, func);
+    }
+
+    public void RegisterFunc<T1, T2, T3, T4>(string funcName, Action<T1, T2, T3, T4> func)
+    {
+        _env.RegisterFunc(funcName, func);
     }
 }
