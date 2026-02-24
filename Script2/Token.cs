@@ -9,9 +9,6 @@ namespace Script2
         Number,
         String,
         Identifier,
-
-        [Token(Category = "build-in func", Example = "wait")]
-        Wait,
         
         [Token(Category = "keyword", Example = "var")]
         Var,

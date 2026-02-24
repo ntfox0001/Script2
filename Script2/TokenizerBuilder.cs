@@ -51,8 +51,6 @@ namespace Script2
                 ["while"] = Script2Token.While,
                 ["return"] = Script2Token.Return,
 
-                ["wait"] = Script2Token.Wait,
-
                 ["true"] = Script2Token.True,
                 ["false"] = Script2Token.False,
             };
