@@ -3,6 +3,16 @@
 public class Script2 : IScript2
 {
     private readonly Script2Environment _env = new();
+
+    /// <summary>
+    /// 打印回调接口，用于自定义 print 函数的输出行为
+    /// </summary>
+    public Action<string> OnPrint
+    {
+        get => _env.OnPrint;
+        set => _env.OnPrint = value;
+    }
+
     public object Execute(string expression)
     {
         return Script2Parser.Execute(expression, _env);

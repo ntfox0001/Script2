@@ -2,6 +2,11 @@
 
 public interface IScript2
 {
+    /// <summary>
+    /// 打印回调接口，用于自定义 print 函数的输出行为
+    /// </summary>
+    Action<string> OnPrint { get; set; }
+
     object Execute(string expression);
     void RegisterFunc<TR>(string funcName, Func<TR> func);
     void RegisterFunc<T1, TR>(string funcName, Func<T1, TR> func);

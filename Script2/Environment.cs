@@ -13,6 +13,9 @@ public class Script2Environment
     // 函数字典（根环境拥有，子环境共享）
     private readonly Dictionary<string, Func<object[], object>> _functions = new();
 
+    // 打印回调接口
+    public Action<string> OnPrint { get; set; }
+
     /// <summary>
     /// 构造函数 - 创建根环境
     /// </summary>
@@ -42,7 +45,14 @@ public class Script2Environment
         _functions["print"] = args =>
         {
             var output = string.Join("", args.Select(arg => arg?.ToString() ?? "null"));
-            Console.WriteLine(output);
+            if (OnPrint != null)
+            {
+                OnPrint(output);
+            }
+            else
+            {
+                Console.WriteLine(output);
+            }
             return VoidValue.Instance;
         };
     }
