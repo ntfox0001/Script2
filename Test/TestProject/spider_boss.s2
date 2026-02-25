@@ -1,0 +1,23 @@
+﻿onStart()
+{
+    tick(1, "mainFire")
+    wait(2, "changeRoller")
+}
+
+changeRoller()
+{
+    roller(true)
+}
+
+activePart("leg1", true)
+activePart("leg2", true)
+activePart("leg3", true)
+activePart("leg4", true)
+
+activePart("gun_r", true)
+activePart("gun_l", true)
+activePart("MainFire", true)
+
+active()
+
+wait(1, "onStart")

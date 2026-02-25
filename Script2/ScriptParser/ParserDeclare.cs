@@ -186,8 +186,7 @@ internal static class ParserDeclare
         (from lbrace in Token.EqualTo(Script2Token.LBrace)
             from statements in Parse.Ref(() => BlockStatements)
             from rbrace in Token.EqualTo(Script2Token.RBrace)
-            select MakeExpression.MakeStatementBlock(statements))
-        .Or(Statement);
+            select MakeExpression.MakeStatementBlock(statements));
 
     public static readonly TokenListParser<Script2Token, Expression[]> BlockStatements =
         (from stmt in Statement
