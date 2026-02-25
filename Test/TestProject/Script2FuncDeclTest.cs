@@ -180,4 +180,21 @@ public class Script2FuncDeclTest
         var r = Script2Parser.Execute(s, env);
         Assert.That(r, Is.TypeOf<VoidValue>());
     }
+    
+    [Test]
+    public void TestCallFunc1()
+    {
+        Script2.Script2 s2 = new Script2.Script2();
+        
+        var s = @"
+    returnTwo() {
+        return 2
+    }
+    
+    ";
+        s2.Execute(s);
+        var r = s2.CallFunc("returnTwo");
+        // 显式return null应该成功
+        Assert.That(r, Is.EqualTo(2.0f));
+    }
 }
