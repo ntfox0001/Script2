@@ -70,10 +70,14 @@ internal partial class MakeExpression
             }
             else
             {
-                // 没有return语句，返回void标记值
+                // 没有return语句，先执行函数体，然后返回void标记值
                 var voidField = typeof(VoidValue).GetField("Instance");
                 var voidValue = Expression.Field(null, voidField!);
-                functionBody = voidValue;
+
+                functionBody = Expression.Block(
+                    Expression.Block(newBody),  // 先执行函数体（如 print 等）
+                    voidValue                     // 然后返回 void
+                );
             }
 
             // 构建完整的语句列表：赋值newEnv变量 + 参数赋值 + 函数体
