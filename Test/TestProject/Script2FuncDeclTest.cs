@@ -179,6 +179,12 @@ public class Script2FuncDeclTest
         var s = File.ReadAllText("spider_boss.s2");
         var r = Script2Parser.Execute(s, env);
         Assert.That(r, Is.TypeOf<VoidValue>());
+
+        var r2 = Script2Parser.CallFunc(env, "onStart1");
+        Assert.That(r2, Is.TypeOf<VoidValue>());
+        
+        var r3 = Script2Parser.CallFunc(env, "onStart2");
+        Assert.That(r3, Is.EqualTo(2.0f));
     }
     
     [Test]
