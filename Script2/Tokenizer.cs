@@ -126,5 +126,43 @@ namespace Script2
             //     next = SkipWhiteSpace(next.Location);
             // } while (next.HasValue);
         }
+
+        private new static Result<char> SkipWhiteSpace(TextSpan span)
+        {
+            var next = span.ConsumeChar();
+            while (next.HasValue)
+            {
+                var ch = next.Value;
+                // 处理空白字符
+                if (char.IsWhiteSpace(ch))
+                {
+                    next = next.Remainder.ConsumeChar();
+                    continue;
+                }
+                
+                // 处理单行注释 //
+                var secondChar = next.Remainder.ConsumeChar();
+                if (ch == '/' && secondChar.HasValue && secondChar.Value == '/')
+                {
+                    var commentEnd = next.Remainder;
+                    var nextInComment = commentEnd.ConsumeChar();
+                    while (nextInComment.HasValue)
+                    {
+                        var commentCh = nextInComment.Value;
+                        if (commentCh == '\n' || commentCh == '\0')
+                        {
+                            break;
+                        }
+                        commentEnd = nextInComment.Remainder;
+                        nextInComment = commentEnd.ConsumeChar();
+                    }
+                    next = commentEnd.ConsumeChar();
+                    continue;
+                }
+                
+                break;
+            }
+            return next;
+        }
     }
 }
