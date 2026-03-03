@@ -126,6 +126,7 @@ public class ExpressionInterpreter
                 {
                     throw new InvalidCastException($"Expected object[] for function arguments, but got {args[1]?.GetType()}");
                 }
+                
                 return envInstance.CallFunction(fn, fnArgs);
             }
             else if (call.Method.Name == nameof(Script2Environment.CreateChildEnvironment))

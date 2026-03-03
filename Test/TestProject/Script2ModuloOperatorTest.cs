@@ -24,7 +24,6 @@ public class Script2ModuloOperatorTest(bool useInterpreter)
     [Test]
     public void TestModuloBasic()
     {
-        
         var r = Script2Parser.Execute("10 % 3", _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
@@ -35,7 +34,6 @@ public class Script2ModuloOperatorTest(bool useInterpreter)
     [Test]
     public void TestModuloDivisible()
     {
-        
         var r = Script2Parser.Execute("10 % 2", _env);
         Assert.That(r, Is.EqualTo(0.0f));
     }
@@ -46,7 +44,6 @@ public class Script2ModuloOperatorTest(bool useInterpreter)
     [Test]
     public void TestModulo15By4()
     {
-        
         var r = Script2Parser.Execute("15 % 4", _env);
         Assert.That(r, Is.EqualTo(3.0f));
     }
@@ -57,7 +54,6 @@ public class Script2ModuloOperatorTest(bool useInterpreter)
     [Test]
     public void TestModuloFloats()
     {
-        
         var r1 = Script2Parser.Execute("10.5 % 3", _env);
         Assert.That(r1, Is.EqualTo(1.0f).Within(0.001));
 
@@ -71,7 +67,6 @@ public class Script2ModuloOperatorTest(bool useInterpreter)
     [Test]
     public void TestModulusOddNumber()
     {
-        
         var s = @"
 var num = 7;
 num % 2;
@@ -86,7 +81,6 @@ num % 2;
     [Test]
     public void TestModulusEvenNumber()
     {
-        
         var s = @"
 var num = 8;
 num % 2;
@@ -101,7 +95,6 @@ num % 2;
     [Test]
     public void TestModulusPrecedencePlus()
     {
-        
         var r = Script2Parser.Execute("10 + 5 % 3", _env);
         // 5 % 3 = 2, 10 + 2 = 12
         Assert.That(r, Is.EqualTo(12.0f));
@@ -113,7 +106,6 @@ num % 2;
     [Test]
     public void TestModulusPrecedenceMinus()
     {
-        
         var r = Script2Parser.Execute("10 - 5 % 3", _env);
         // 5 % 3 = 2, 10 - 2 = 8
         Assert.That(r, Is.EqualTo(8.0f));
@@ -125,7 +117,6 @@ num % 2;
     [Test]
     public void TestModulusWithMultiplyDivide()
     {
-        
         var r1 = Script2Parser.Execute("20 % 6 * 2", _env);
         // 20 % 6 = 2, 2 * 2 = 4
         Assert.That(r1, Is.EqualTo(4.0f));
@@ -141,7 +132,6 @@ num % 2;
     [Test]
     public void TestModulusInIf()
     {
-        
         var s = @"
 var num = 7;
 if (num % 2 == 1) {
@@ -160,7 +150,6 @@ if (num % 2 == 1) {
     [Test]
     public void TestModulusInIfEven()
     {
-        
         var s = @"
 var num = 8;
 if (num % 2 == 0) {
@@ -179,7 +168,6 @@ if (num % 2 == 0) {
     [Test]
     public void TestModulusInWhile()
     {
-        
         var s = @"
 var counter = 0;
 while (counter % 10 != 0 or counter == 0) {
@@ -200,7 +188,6 @@ counter;
     [Test]
     public void TestModulusInFunction()
     {
-        
         var s = @"
 remainder(a, b) {
     return a % b;
@@ -217,7 +204,6 @@ remainder(17, 5);
     [Test]
     public void TestModulusDivisibility()
     {
-        
         var s = @"
 isDivisible(n, divisor) {
     return n % divisor == 0;
@@ -234,7 +220,6 @@ isDivisible(15, 5);
     [Test]
     public void TestModulusNegative()
     {
-        
         var r1 = Script2Parser.Execute("-10 % 3", _env);
         Assert.That(r1, Is.EqualTo(-1.0f));
 
@@ -248,7 +233,6 @@ isDivisible(15, 5);
     [Test]
     public void TestModulusChain()
     {
-        
         var r = Script2Parser.Execute("100 % 30 % 7", _env);
         // 100 % 30 = 10, 10 % 7 = 3
         Assert.That(r, Is.EqualTo(3.0f));
@@ -260,7 +244,6 @@ isDivisible(15, 5);
     [Test]
     public void TestModulusWithParentheses()
     {
-        
         var r1 = Script2Parser.Execute("(10 + 5) % 4", _env);
         // (10 + 5) = 15, 15 % 4 = 3
         Assert.That(r1, Is.EqualTo(3.0f));
@@ -276,11 +259,7 @@ isDivisible(15, 5);
     [Test]
     public void TestModulusByZero()
     {
-        
-        var ex = Assert.Throws<System.DivideByZeroException>(() =>
-        {
-            Script2Parser.Execute("10 % 0", _env);
-        });
+        var ex = Assert.Throws<System.DivideByZeroException>(() => { Script2Parser.Execute("10 % 0", _env); });
     }
 
     /// <summary>
@@ -289,7 +268,6 @@ isDivisible(15, 5);
     [Test]
     public void TestModulusComplexExpression()
     {
-        
         var r = Script2Parser.Execute("(100 + 50) % 7 * 2 - 5", _env);
         // (100 + 50) = 150, 150 % 7 = 3, 3 * 2 = 6, 6 - 5 = 1
         Assert.That(r, Is.EqualTo(1.0f));
@@ -301,7 +279,6 @@ isDivisible(15, 5);
     [Test]
     public void TestModulusWithVariables()
     {
-        
         var s = @"
 var a = 100;
 var b = 7;
@@ -318,7 +295,6 @@ c;
     [Test]
     public void TestModulusGCD()
     {
-        
         var s = @"
 gcd(a, b) {
     while (b != 0) {
@@ -342,7 +318,6 @@ gcd(48, 18);
     [Test]
     public void TestModulusGetDigits()
     {
-        
         var s = @"
 var num = 1234;
 var ones = num % 10;
@@ -360,7 +335,6 @@ ones;
     [Test]
     public void TestModulusLoopCounter()
     {
-        
         var s = @"
 var i = 0;
 var result = 0;
@@ -384,16 +358,12 @@ result;
     [Test]
     public void TestModulusStringVarAndNumberVar()
     {
-        
         var s = @"
 var str = ""hello"";
 var num = 3;
 str % num;
 ";
-        var ex = Assert.Throws<InvalidCastException>(() =>
-        {
-            Script2Parser.Execute(s, _env);
-        });
+        var ex = Assert.Throws<InvalidCastException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("String"));
     }
 
@@ -403,16 +373,12 @@ str % num;
     [Test]
     public void TestModulusNumberVarAndStringVar()
     {
-        
         var s = @"
 var num = 10;
 var str = ""world"";
 num % str;
 ";
-        var ex = Assert.Throws<InvalidCastException>(() =>
-        {
-            Script2Parser.Execute(s, _env);
-        });
+        var ex = Assert.Throws<InvalidCastException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("String"));
     }
 
@@ -422,11 +388,7 @@ num % str;
     [Test]
     public void TestModulusStringLiteralAndNumber()
     {
-        
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("\"hello\" % 3", _env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("\"hello\" % 3", _env); });
         Assert.That(ex.Message, Does.Contain("No coercion operator"));
     }
 
@@ -436,11 +398,7 @@ num % str;
     [Test]
     public void TestModulusNumberAndStringLiteral()
     {
-        
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("10 % \"hello\"", _env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("10 % \"hello\"", _env); });
         Assert.That(ex.Message, Does.Contain("No coercion operator"));
     }
 
@@ -450,16 +408,12 @@ num % str;
     [Test]
     public void TestModulusStringAndString()
     {
-        
         var s = @"
 var str1 = ""hello"";
 var str2 = ""world"";
 str1 % str2;
 ";
-        var ex = Assert.Throws<InvalidCastException>(() =>
-        {
-            Script2Parser.Execute(s, _env);
-        });
+        var ex = Assert.Throws<InvalidCastException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("String"));
     }
 }
