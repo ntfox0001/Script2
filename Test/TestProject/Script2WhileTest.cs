@@ -7,10 +7,14 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2WhileTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
     /// <summary>
     /// 测试while循环条件为假时不执行
@@ -18,11 +22,10 @@ public class Script2WhileTest(bool useInterpreter)
     [Test]
     public void TestWhileLoop_ConditionFalse()
     {
-        var env = new Script2Environment();
         var s = @"
 while (false) { 1 + 2 }
 5";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(5f));
     }
 
@@ -32,11 +35,10 @@ while (false) { 1 + 2 }
     [Test]
     public void TestWhileLoop_SingleStatement()
     {
-        var env = new Script2Environment();
         var s = @"
 while (false) { Max(1, 2) }
 Max(3, 5)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(5f));
     }
 
@@ -46,12 +48,11 @@ Max(3, 5)";
     [Test]
     public void TestWhileLoop_Basic()
     {
-        var env = new Script2Environment();
         // 使用递归函数模拟循环效果
         var s = @"
 loopFunc(n) { if (n > 0) { loopFunc(n - 1) } return 0 }
 loopFunc(3)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(0f));
     }
 
@@ -61,12 +62,11 @@ loopFunc(3)";
     [Test]
     public void TestWhileLoop_WithIf()
     {
-        var env = new Script2Environment();
         // 只测试while循环的基本功能
         var s = @"
 while (false) { Max(1, 2) }
 Max(10, 20)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(20f));
     }
 
@@ -76,11 +76,10 @@ Max(10, 20)";
     [Test]
     public void TestWhileLoop_WithOr()
     {
-        var env = new Script2Environment();
         var s = @"
 while (false or false) { Max(1, 2) }
 Max(30, 40)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(40f));
     }
 
@@ -90,11 +89,10 @@ Max(30, 40)";
     [Test]
     public void TestWhileLoop_NestedInIf()
     {
-        var env = new Script2Environment();
         var s = @"
 if (false) { while (false) { Max(1, 2) } }
 Max(50, 60)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(60f));
     }
 
@@ -104,11 +102,10 @@ Max(50, 60)";
     [Test]
     public void TestWhileLoop_TrueCondition()
     {
-        var env = new Script2Environment();
         var s = @"
 while (false) { Max(1, 2) }
 Max(70, 80)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(80f));
     }
 
@@ -118,14 +115,13 @@ Max(70, 80)";
     [Test]
     public void TestWhileLoop_WithReassignment()
     {
-        var env = new Script2Environment();
         var s = @"
 testFunc(n) {
     while (n > 0) { n = n - 1 }
     return n
 }
 testFunc(5)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(0f));
     }
 
@@ -135,7 +131,6 @@ testFunc(5)";
     [Test]
     public void TestWhileLoop_Sum()
     {
-        var env = new Script2Environment();
         var s = @"
 testFunc(max) {
     var sum = 0
@@ -144,14 +139,13 @@ testFunc(max) {
     return sum
 }
 testFunc(5)";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15f));
     }
-    
+
     [Test, Timeout(5000)]
     public void TestWhileLoop_CallAction()
     {
-        var env = new Script2Environment();
         var s = @"
 testFunc() {
     print(1)
@@ -160,12 +154,12 @@ var i = 0
 
 while(i < 3){
     testFunc()
-    
+
     i = i + 1
 }
 i
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // i 最终应该是 3
         Assert.That(r, Is.EqualTo(3f));
     }

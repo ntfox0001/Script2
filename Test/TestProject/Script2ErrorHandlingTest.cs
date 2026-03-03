@@ -10,10 +10,14 @@ namespace TestProject;
 [TestFixture(false)]
 public class Script2ErrorHandlingTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -22,10 +26,9 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [Test]
     public void TestUndefinedVariable()
     {
-        var env = new Script2Environment();
         Assert.Throws<InvalidOperationException>(() =>
         {
-            Script2Parser.Execute("undefinedVar", env);
+            Script2Parser.Execute("undefinedVar", _env);
         });
     }
 
@@ -35,10 +38,9 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [Test]
     public void TestUndefinedFunction()
     {
-        var env = new Script2Environment();
         Assert.Throws<InvalidOperationException>(() =>
         {
-            Script2Parser.Execute("undefinedFunc(1, 2)", env);
+            Script2Parser.Execute("undefinedFunc(1, 2)", _env);
         });
     }
 
@@ -48,11 +50,10 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [Test]
     public void TestFunctionArgCountMismatch()
     {
-        var env = new Script2Environment();
-        env.RegisterFunc<int, int>("TestFunc", (arg) => arg * 2);
+        _env.RegisterFunc<int, int>("TestFunc", (arg) => arg * 2);
         Assert.Throws<InvalidOperationException>(() =>
         {
-            Script2Parser.Execute("TestFunc(1, 2)", env);
+            Script2Parser.Execute("TestFunc(1, 2)", _env);
         });
     }
 
@@ -62,8 +63,7 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [Test]
     public void TestDivisionByZero()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("1 / 0", env);
+        var r = Script2Parser.Execute("1 / 0", _env);
         // 除以零结果是正无穷或负无穷
         Assert.That(float.IsInfinity((float)r));
     }
@@ -74,10 +74,9 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [Test]
     public void TestUnclosedParenthesis()
     {
-        var env = new Script2Environment();
         Assert.Throws<Superpower.ParseException>(() =>
         {
-            Script2Parser.Execute("Max(1, 2", env);
+            Script2Parser.Execute("Max(1, 2", _env);
         });
     }
 
@@ -87,7 +86,6 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [Test]
     public void TestAssignVoidToVariable()
     {
-        var env = new Script2Environment();
         var s = @"
 noReturn() {
     var x = 1;
@@ -96,7 +94,7 @@ var result = noReturn();
 ";
         Assert.Throws<InvalidOperationException>(() =>
         {
-            Script2Parser.Execute(s, env);
+            Script2Parser.Execute(s, _env);
         });
     }
 
@@ -120,10 +118,9 @@ var result = noReturn();
     [Test]
     public void TestUnclosedString()
     {
-        var env = new Script2Environment();
         Assert.Throws<Superpower.ParseException>(() =>
         {
-            Script2Parser.Execute(@"""unclosed", env);
+            Script2Parser.Execute(@"""unclosed", _env);
         });
     }
 
@@ -133,10 +130,9 @@ var result = noReturn();
     [Test]
     public void TestInvalidExpression()
     {
-        var env = new Script2Environment();
         Assert.Throws<Superpower.ParseException>(() =>
         {
-            Script2Parser.Execute("5 + + 3", env);
+            Script2Parser.Execute("5 + + 3", _env);
         });
     }
 }

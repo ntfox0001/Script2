@@ -4,13 +4,17 @@ using Script2;
 namespace TestProject;
 
 [TestFixture(true)]
-// [TestFixture(false)]
+[TestFixture(false)]
 public class Script2FuncDeclTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -19,15 +23,14 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestFuncDeclaration()
     {
-        var env = new Script2Environment();
         var s = @"
     add() { return 5 }
     ";
         try
         {
-            var r = Script2Parser.Execute(s, env);
+            var r = Script2Parser.Execute(s, _env);
             Assert.That(r, Is.Null);
-            Assert.That(env.HasFunction("add"), Is.True, "Function 'add' should be registered");
+            Assert.That(_env.HasFunction("add"), Is.True, "Function 'add' should be registered");
         }
         catch (Exception ex)
         {
@@ -42,12 +45,11 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestFuncCall()
     {
-        var env = new Script2Environment();
         var s1 = @"
     add(a, b) { return a + b }
     add(3, 5)
     ";
-        var r = Script2Parser.Execute(s1, env);
+        var r = Script2Parser.Execute(s1, _env);
         Assert.That(r, Is.EqualTo(8.0f));
     }
 
@@ -57,7 +59,6 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestFuncDeclarationWithVars()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 22
     var y = 11
@@ -68,7 +69,7 @@ public class Script2FuncDeclTest(bool useInterpreter)
     }
     add(2, 3)
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(13.0f));
     }
 
@@ -78,12 +79,11 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestFuncDeclarationMultiArgs()
     {
-        var env = new Script2Environment();
         var s = @"
     sum(a, b, c) { return a + b + c }
     sum(1, 2, 3)
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(6.0f));
     }
 
@@ -93,14 +93,13 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestFuncWithReturn()
     {
-        var env = new Script2Environment();
         var s = @"
     add(a, b) {
         return a + b
     }
     add(3, 5)
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(8.0f));
     }
 
@@ -110,14 +109,13 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestFuncWithoutReturn()
     {
-        var env = new Script2Environment();
         var s = @"
     printHello() {
         5
     }
     printHello()
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 没有return语句，应该返回void标记值
         Assert.That(r, Is.TypeOf<VoidValue>());
     }
@@ -128,14 +126,13 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestReturnZero()
     {
-        var env = new Script2Environment();
         var s = @"
     returnZero() {
         return 0
     }
     returnZero()
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 显式return 0应该成功
         Assert.That(r, Is.EqualTo(0.0f));
     }
@@ -146,14 +143,13 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestReturnNull()
     {
-        var env = new Script2Environment();
         var s = @"
     returnNull() {
         return null
     }
     returnNull()
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 显式return null应该成功
         Assert.That(r, Is.Null);
     }
@@ -161,50 +157,49 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestReadFile()
     {
-        var env = new Script2Environment();
         // 注册 s2 脚本中调用的外部函数
-        env.RegisterFunc<string, bool>("activePart", (name, act) =>
+        _env.RegisterFunc<string, bool>("activePart", (name, act) =>
         {
             Console.WriteLine($"activePart({name}, {act})");
         });
-        env.RegisterFunc("active", () =>
+        _env.RegisterFunc("active", () =>
         {
             Console.WriteLine("active()");
         });
-        env.RegisterFunc<float, string>("tick", (delay, eventName) =>
+        _env.RegisterFunc<float, string>("tick", (delay, eventName) =>
         {
             Console.WriteLine($"tick({delay}, \"{eventName}\")");
         });
-        env.RegisterFunc<float, string>("wait", (delay, eventName) =>
+        _env.RegisterFunc<float, string>("wait", (delay, eventName) =>
         {
             Console.WriteLine($"wait({delay}, \"{eventName}\")");
         });
-        env.RegisterFunc<bool>("roller", (enable) =>
+        _env.RegisterFunc<bool>("roller", (enable) =>
         {
             Console.WriteLine($"roller({enable})");
         });
 
         var s = File.ReadAllText("spider_boss.s2");
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.TypeOf<VoidValue>());
 
-        var r2 = Script2Parser.CallFunc(env, "onStart1");
+        var r2 = Script2Parser.CallFunc(_env, "onStart1");
         Assert.That(r2, Is.TypeOf<VoidValue>());
-        
-        var r3 = Script2Parser.CallFunc(env, "onStart2");
+
+        var r3 = Script2Parser.CallFunc(_env, "onStart2");
         Assert.That(r3, Is.EqualTo(2.0f));
     }
-    
+
     [Test]
     public void TestCallFunc1()
     {
         Script2.Script2 s2 = new Script2.Script2();
-        
+
         var s = @"
     returnTwo() {
         return 2
     }
-    
+
     ";
         s2.Execute(s);
         var r = s2.CallFunc("returnTwo");

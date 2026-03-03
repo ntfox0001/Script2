@@ -10,10 +10,14 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2NotOperatorTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -22,8 +26,7 @@ public class Script2NotOperatorTest(bool useInterpreter)
     [Test]
     public void TestNotTrue()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not true", env);
+        var r = Script2Parser.Execute("not true", _env);
         Assert.That(r, Is.EqualTo(false));
     }
 
@@ -33,8 +36,7 @@ public class Script2NotOperatorTest(bool useInterpreter)
     [Test]
     public void TestNotFalse()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not false", env);
+        var r = Script2Parser.Execute("not false", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -44,8 +46,7 @@ public class Script2NotOperatorTest(bool useInterpreter)
     [Test]
     public void TestDoubleNot()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not not true", env);
+        var r = Script2Parser.Execute("not not true", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -55,7 +56,6 @@ public class Script2NotOperatorTest(bool useInterpreter)
     [Test]
     public void TestNotInIf()
     {
-        var env = new Script2Environment();
         var s = @"
 if (not false) {
     1;
@@ -63,7 +63,7 @@ if (not false) {
     0;
 }
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1));
     }
 
@@ -73,8 +73,7 @@ if (not false) {
     [Test]
     public void TestNotWithComparison()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not (5 > 10)", env);
+        var r = Script2Parser.Execute("not (5 > 10)", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -84,8 +83,7 @@ if (not false) {
     [Test]
     public void TestNotWithAnd()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not (true and false)", env);
+        var r = Script2Parser.Execute("not (true and false)", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -95,8 +93,7 @@ if (not false) {
     [Test]
     public void TestNotWithOr()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not (false or false)", env);
+        var r = Script2Parser.Execute("not (false or false)", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -106,12 +103,11 @@ if (not false) {
     [Test]
     public void TestNotWithVariable()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = true;
 not a;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(false));
     }
 
@@ -121,14 +117,13 @@ not a;
     [Test]
     public void TestNotInFunction()
     {
-        var env = new Script2Environment();
         var s = @"
 isFalse(b) {
     return not b;
 }
 isFalse(true);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(false));
     }
 
@@ -138,8 +133,7 @@ isFalse(true);
     [Test]
     public void TestNotPrecedence()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not true or false", env);
+        var r = Script2Parser.Execute("not true or false", _env);
         // not true = false, then false or false = false
         Assert.That(r, Is.EqualTo(false));
     }
@@ -150,8 +144,7 @@ isFalse(true);
     [Test]
     public void TestComplexNotExpression()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("not (5 > 3 and 10 < 20)", env);
+        var r = Script2Parser.Execute("not (5 > 3 and 10 < 20)", _env);
         // 5 > 3 = true, 10 < 20 = true, true and true = true, not true = false
         Assert.That(r, Is.EqualTo(false));
     }
@@ -162,7 +155,6 @@ isFalse(true);
     [Test]
     public void TestNotInWhile()
     {
-        var env = new Script2Environment();
         var s = @"
 var counter = 0;
 while (counter < 3) {
@@ -170,7 +162,7 @@ while (counter < 3) {
 }
 not (counter == 3);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(false));
     }
 }

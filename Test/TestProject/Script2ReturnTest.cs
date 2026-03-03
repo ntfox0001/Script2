@@ -7,10 +7,14 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2ReturnTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -19,7 +23,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnEarlyExit()
     {
-        var env = new Script2Environment();
         var s = @"
             test() {
                 return 1;
@@ -28,7 +31,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test();
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
 
@@ -38,14 +41,13 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestNoReturnNoValue()
     {
-        var env = new Script2Environment();
         var s = @"
             test() {
                 var x = 1;
             }
             test();
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.TypeOf<VoidValue>());
     }
 
@@ -55,7 +57,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestConditionalReturnLarge()
     {
-        var env = new Script2Environment();
         var s = @"
             test(n) {
                 if (n > 5) {
@@ -65,7 +66,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test(10);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
 
@@ -75,7 +76,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestConditionalReturnSmall()
     {
-        var env = new Script2Environment();
         var s = @"
             test(n) {
                 if (n > 5) {
@@ -85,7 +85,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test(3);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(0.0f));
     }
 
@@ -95,12 +95,11 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturn1()
     {
-        var env = new Script2Environment();
         var s = @"
             return 1
             2
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
 
@@ -110,14 +109,13 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnInIfInScript()
     {
-        var env = new Script2Environment();
         var s = @"
             if (3 > 2) {
                 return 1
             }
             2
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
 
@@ -127,7 +125,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnInElseInScript()
     {
-        var env = new Script2Environment();
         var s = @"
             if (1 > 2) {
                 3
@@ -136,7 +133,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             2
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
 
@@ -146,7 +143,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnInNestedIfInScript()
     {
-        var env = new Script2Environment();
         var s = @"
             if (1 > 0) {
                 if (2 > 1) {
@@ -155,7 +151,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             2
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(100.0f));
     }
 
@@ -165,12 +161,11 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnNullInScript()
     {
-        var env = new Script2Environment();
         var s = @"
             return null
             2
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.Null);
     }
 
@@ -180,13 +175,12 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestNoReturnInScript()
     {
-        var env = new Script2Environment();
         var s = @"
             var x = 1
             var y = 2
             x + y
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 没有return，返回最后一个表达式的值
         Assert.That(r, Is.EqualTo(3.0f));
     }
@@ -197,12 +191,11 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnExpressionInScript()
     {
-        var env = new Script2Environment();
         var s = @"
             return 5 * 10 + 3
             999
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(53.0f));
     }
 
@@ -212,7 +205,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnSkipsSubsequentCode()
     {
-        var env = new Script2Environment();
         var s = @"
             test() {
                 var x = 1;
@@ -224,7 +216,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test();
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(100.0f));
     }
 
@@ -234,7 +226,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestNestedIfReturn()
     {
-        var env = new Script2Environment();
         var s = @"
             test(a, b, c) {
                 if (a > 0) {
@@ -247,7 +238,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test(1, 2, 3);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(6.0f));
     }
 
@@ -257,7 +248,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnAtEndOfFunction()
     {
-        var env = new Script2Environment();
         var s = @"
             test(a, b) {
                 var sum = a + b;
@@ -265,7 +255,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test(3, 7);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(10.0f));
     }
 
@@ -275,7 +265,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestMultipleReturns()
     {
-        var env = new Script2Environment();
         var s = @"
             test(x) {
                 if (x == 1) {
@@ -291,7 +280,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test(2);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(20.0f));
     }
 
@@ -301,14 +290,13 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnExpression()
     {
-        var env = new Script2Environment();
         var s = @"
             test(a, b) {
                 return a * 2 + b * 3;
             }
             test(5, 10);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(40.0f));
     }
 
@@ -318,7 +306,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestReturnInElse()
     {
-        var env = new Script2Environment();
         var s = @"
             test(x) {
                 if (x > 10) {
@@ -329,7 +316,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test(5);
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(200.0f));
     }
 
@@ -339,7 +326,6 @@ public class Script2ReturnTest(bool useInterpreter)
     [Test]
     public void TestFunctionWithoutReturnHasStatements()
     {
-        var env = new Script2Environment();
         var s = @"
             test() {
                 var a = 1;
@@ -348,7 +334,7 @@ public class Script2ReturnTest(bool useInterpreter)
             }
             test();
         ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.TypeOf<VoidValue>());
     }
 }

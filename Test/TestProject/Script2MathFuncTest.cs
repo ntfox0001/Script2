@@ -10,10 +10,14 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2MathFuncTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -22,8 +26,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestAbs()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Abs(-5.5)", env);
+        var r = Script2Parser.Execute("Abs(-5.5)", _env);
         Assert.That(r, Is.EqualTo(5.5f));
     }
 
@@ -33,8 +36,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestSqrt()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Sqrt(16)", env);
+        var r = Script2Parser.Execute("Sqrt(16)", _env);
         Assert.That(r, Is.EqualTo(4.0f));
     }
 
@@ -44,8 +46,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestPow()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Pow(2, 3)", env);
+        var r = Script2Parser.Execute("Pow(2, 3)", _env);
         Assert.That(r, Is.EqualTo(8.0f));
     }
 
@@ -55,8 +56,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestSin()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Sin(0)", env);
+        var r = Script2Parser.Execute("Sin(0)", _env);
         Assert.That(r, Is.EqualTo(0.0f));
     }
 
@@ -66,8 +66,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestCos()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Cos(0)", env);
+        var r = Script2Parser.Execute("Cos(0)", _env);
         Assert.That(r, Is.EqualTo(1.0f));
     }
 
@@ -77,8 +76,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestMin()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Min(3, 5)", env);
+        var r = Script2Parser.Execute("Min(3, 5)", _env);
         Assert.That(r, Is.EqualTo(3.0f));
     }
 
@@ -88,8 +86,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestMax()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Max(3, 5)", env);
+        var r = Script2Parser.Execute("Max(3, 5)", _env);
         Assert.That(r, Is.EqualTo(5.0f));
     }
 
@@ -99,8 +96,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestRound()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Round(3.7)", env);
+        var r = Script2Parser.Execute("Round(3.7)", _env);
         Assert.That(r, Is.EqualTo(4.0f));
     }
 
@@ -110,8 +106,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestFloor()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Floor(3.9)", env);
+        var r = Script2Parser.Execute("Floor(3.9)", _env);
         Assert.That(r, Is.EqualTo(3.0f));
     }
 
@@ -121,8 +116,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestCeiling()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Ceiling(3.1)", env);
+        var r = Script2Parser.Execute("Ceiling(3.1)", _env);
         Assert.That(r, Is.EqualTo(4.0f));
     }
 
@@ -132,8 +126,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestLog()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Log(2.718281828)", env);
+        var r = Script2Parser.Execute("Log(2.718281828)", _env);
         Assert.That(r, Is.EqualTo(1.0f).Within(0.001));
     }
 
@@ -143,8 +136,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestLog10()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Log10(100)", env);
+        var r = Script2Parser.Execute("Log10(100)", _env);
         Assert.That(r, Is.EqualTo(2.0f));
     }
 
@@ -154,8 +146,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestExp()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Exp(1)", env);
+        var r = Script2Parser.Execute("Exp(1)", _env);
         Assert.That(r, Is.EqualTo(2.718281828f).Within(0.001));
     }
 
@@ -165,8 +156,7 @@ public class Script2MathFuncTest(bool useInterpreter)
     [Test]
     public void TestPI()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Sin(PI / 2)", env);
+        var r = Script2Parser.Execute("Sin(PI / 2)", _env);
         Assert.That(r, Is.EqualTo(1.0f).Within(0.001));
     }
 }

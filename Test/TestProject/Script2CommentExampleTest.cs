@@ -7,16 +7,19 @@ namespace TestProject;
 [TestFixture(false)]
 public class Script2CommentExampleTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     [Test]
     public void TestCommentExample()
     {
-        var env = new Script2Environment();
         var content = @"
 // 这是一个示例脚本，展示双斜杠注释功能
 
@@ -56,7 +59,7 @@ sum
 // 下面这行代码不会执行，因为它在注释中
 // var ignored = 999
 ";
-        var result = Script2Parser.Execute(content, env);
+        var result = Script2Parser.Execute(content, _env);
         Assert.That(result, Is.EqualTo(10.0f)); // 0+1+2+3+4 = 10
         Console.WriteLine($"Result: {result}");
     }

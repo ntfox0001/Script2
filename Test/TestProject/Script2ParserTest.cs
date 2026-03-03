@@ -7,10 +7,15 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2ParserTest(bool useInterpreter)
 {
+    private Script2Environment _env;
+
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -19,8 +24,7 @@ public class Script2ParserTest(bool useInterpreter)
     [Test]
     public void TestLambda1()
     {
-        var env = new Script2Environment();
-        var r = Script2Parser.Execute("Max(9, 81)", env);
+        var r = Script2Parser.Execute("Max(9, 81)", _env);
         Assert.That(r, Is.EqualTo(81));
     }
 
@@ -30,13 +34,12 @@ public class Script2ParserTest(bool useInterpreter)
     [Test]
     public void TestLambda2()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 9
 var b = Max(3, a)
 b + 2
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(11));
     }
 
@@ -46,13 +49,12 @@ b + 2
     [Test]
     public void TestLambda3()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 9;
 var b = Max(3, a);
 b + 2;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(11));
     }
 
@@ -62,9 +64,8 @@ b + 2;
     [Test]
     public void TestLambda4()
     {
-        var env = new Script2Environment();
         var s = @"5;";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(5));
     }
 
@@ -74,21 +75,19 @@ b + 2;
     [Test]
     public void TestLambda5()
     {
-        var env = new Script2Environment();
         var s = @"5;6";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(6));
     }
 
     [Test]
     public void TestLambda7()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = Max(3, 5)+3
 a;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(8));
     }
 
@@ -98,13 +97,12 @@ a;
     [Test]
     public void TestLambda8()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 9
 var b = Max(3, a);
 b + 2
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(11));
     }
 
@@ -114,12 +112,11 @@ b + 2
     [Test]
     public void TestLambda9()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = Max(3, Min(4, 1))+3;
 a
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(6));
     }
 
@@ -129,7 +126,6 @@ a
     [Test]
     public void TestLogicalAnd()
     {
-        var env = new Script2Environment();
         var s = @"
 if (true and true) {
     1;
@@ -137,7 +133,7 @@ if (true and true) {
     0;
 }
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1));
     }
 
@@ -147,7 +143,6 @@ if (true and true) {
     [Test]
     public void TestLogicalOr()
     {
-        var env = new Script2Environment();
         var s = @"
 if (true or false) {
     1;
@@ -155,7 +150,7 @@ if (true or false) {
     0;
 }
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(1));
     }
 
@@ -165,13 +160,12 @@ if (true or false) {
     [Test]
     public void TestComparisonOperators()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 5;
 var b = 10;
 a < b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -181,11 +175,10 @@ a < b;
     [Test]
     public void TestOperatorPrecedence()
     {
-        var env = new Script2Environment();
         var s = @"
 2 + 3 * 4;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(14));
     }
 
@@ -195,11 +188,10 @@ a < b;
     [Test]
     public void TestParentheses()
     {
-        var env = new Script2Environment();
         var s = @"
 (2 + 3) * 4;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(20));
     }
 }

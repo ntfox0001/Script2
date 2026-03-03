@@ -6,15 +6,16 @@ namespace TestProject;
 /// <summary>
 /// 测试类型不匹配的错误处理
 /// </summary>
-
 [TestFixture(false)]
 [TestFixture(true)]
 public class Script2TypeMismatchTest(bool useInterpreter)
 {
+    private Script2Environment _env;
+
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment { UseInterpreterMode = useInterpreter };
     }
 
     /// <summary>
@@ -23,16 +24,12 @@ public class Script2TypeMismatchTest(bool useInterpreter)
     [Test]
     public void TestEqualNumberAndString()
     {
-        var env = new Script2Environment();
         var s = @"
 var num = 5;
 var str = ""hello"";
 num == str;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
         Assert.That(ex.Message, Does.Contain("float"));
         Assert.That(ex.Message, Does.Contain("string"));
@@ -44,16 +41,12 @@ num == str;
     [Test]
     public void TestEqualStringAndNumber()
     {
-        var env = new Script2Environment();
         var s = @"
 var str = ""hello"";
 var num = 5;
 str == num;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -63,16 +56,12 @@ str == num;
     [Test]
     public void TestEqualNumberAndBoolean()
     {
-        var env = new Script2Environment();
         var s = @"
 var num = 5;
 var boolVal = true;
 num == boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
         Assert.That(ex.Message, Does.Contain("float"));
         Assert.That(ex.Message, Does.Contain("bool"));
@@ -84,16 +73,12 @@ num == boolVal;
     [Test]
     public void TestEqualStringAndBoolean()
     {
-        var env = new Script2Environment();
         var s = @"
 var str = ""hello"";
 var boolVal = true;
 str == boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -103,16 +88,12 @@ str == boolVal;
     [Test]
     public void TestEqualBooleanAndNumber()
     {
-        var env = new Script2Environment();
         var s = @"
 var boolVal = false;
 var num = 10;
 boolVal == num;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -122,16 +103,12 @@ boolVal == num;
     [Test]
     public void TestNotEqualNumberAndString()
     {
-        var env = new Script2Environment();
         var s = @"
 var num = 5;
 var str = ""hello"";
 num != str;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
         Assert.That(ex.Message, Does.Contain("!="));
     }
@@ -142,16 +119,12 @@ num != str;
     [Test]
     public void TestNotEqualStringAndBoolean()
     {
-        var env = new Script2Environment();
         var s = @"
 var str = ""test"";
 var boolVal = true;
 str != boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -161,16 +134,12 @@ str != boolVal;
     [Test]
     public void TestNotEqualNumberAndBoolean()
     {
-        var env = new Script2Environment();
         var s = @"
 var num = 5;
 var boolVal = false;
 num != boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -180,11 +149,7 @@ num != boolVal;
     [Test]
     public void TestEqualLiteralNumberAndString()
     {
-        var env = new Script2Environment();
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("5 == \"hello\"", env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("5 == \"hello\"", _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -194,11 +159,7 @@ num != boolVal;
     [Test]
     public void TestEqualLiteralStringAndNumber()
     {
-        var env = new Script2Environment();
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("\"hello\" == 5", env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("\"hello\" == 5", _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -208,11 +169,7 @@ num != boolVal;
     [Test]
     public void TestEqualLiteralNumberAndBoolean()
     {
-        var env = new Script2Environment();
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("5 == true", env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("5 == true", _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -222,11 +179,7 @@ num != boolVal;
     [Test]
     public void TestEqualLiteralBooleanAndNumber()
     {
-        var env = new Script2Environment();
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("false == 0", env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("false == 0", _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -236,11 +189,7 @@ num != boolVal;
     [Test]
     public void TestNotEqualLiteralNumberAndString()
     {
-        var env = new Script2Environment();
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute("5 != \"hello\"", env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("5 != \"hello\"", _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -250,7 +199,6 @@ num != boolVal;
     [Test]
     public void TestTypeMismatchInIf()
     {
-        var env = new Script2Environment();
         var s = @"
 var num = 5;
 var str = ""hello"";
@@ -260,10 +208,7 @@ if (num == str) {
     0;
 }
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -273,7 +218,6 @@ if (num == str) {
     [Test]
     public void TestTypeMismatchInWhile()
     {
-        var env = new Script2Environment();
         var s = @"
 var num = 0;
 var str = ""hello"";
@@ -281,10 +225,7 @@ while (num != str) {
     num = num + 1;
 }
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -294,17 +235,13 @@ while (num != str) {
     [Test]
     public void TestTypeMismatchInFunction()
     {
-        var env = new Script2Environment();
         var s = @"
 compare(a, b) {
     return a == b;
 }
 compare(5, ""hello"");
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() =>
-        {
-            Script2Parser.Execute(s, env);
-        });
+        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
         Assert.That(ex.Message, Does.Contain("Type mismatch"));
     }
 
@@ -314,14 +251,13 @@ compare(5, ""hello"");
     [Test]
     public void TestFunctionParamObjectToNumber()
     {
-        var env = new Script2Environment();
         var s = @"
 isEqual(n) {
     return n == 5;
 }
 isEqual(5);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 函数参数 n 是 object 类型，应该能自动转换为 float 与 5 比较
         Assert.That(r, Is.EqualTo(true));
     }
@@ -332,14 +268,13 @@ isEqual(5);
     [Test]
     public void TestFunctionParamObjectToString()
     {
-        var env = new Script2Environment();
         var s = @"
 isEqual(str) {
     return str == ""hello"";
 }
 isEqual(""hello"");
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 函数参数 str 是 object 类型，应该能自动转换为 string 与 "hello" 比较
         Assert.That(r, Is.EqualTo(true));
     }
@@ -350,14 +285,13 @@ isEqual(""hello"");
     [Test]
     public void TestFunctionParamObjectToBoolean()
     {
-        var env = new Script2Environment();
         var s = @"
 isEqual(b) {
     return b == true;
 }
 isEqual(true);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 函数参数 b 是 object 类型，应该能自动转换为 bool 与 true 比较
         Assert.That(r, Is.EqualTo(true));
     }
@@ -368,14 +302,13 @@ isEqual(true);
     [Test]
     public void TestFunctionParamObjectToNumberNotEqual()
     {
-        var env = new Script2Environment();
         var s = @"
 isNotEqual(n) {
     return n != 5;
 }
 isNotEqual(10);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         // 函数参数 n 是 object 类型，应该能自动转换为 float 与 5 比较
         Assert.That(r, Is.EqualTo(true));
     }
@@ -386,13 +319,12 @@ isNotEqual(10);
     [Test]
     public void TestEqualSameTypeNumbers()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 5;
 var b = 5;
 a == b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -402,13 +334,12 @@ a == b;
     [Test]
     public void TestEqualSameTypeStrings()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = ""hello"";
 var b = ""hello"";
 a == b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -418,13 +349,12 @@ a == b;
     [Test]
     public void TestEqualSameTypeBooleans()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = true;
 var b = true;
 a == b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -434,13 +364,12 @@ a == b;
     [Test]
     public void TestNotEqualSameTypeNumbers()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 5;
 var b = 10;
 a != b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -450,13 +379,12 @@ a != b;
     [Test]
     public void TestNotEqualSameTypeStrings()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = ""hello"";
 var b = ""world"";
 a != b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -466,13 +394,12 @@ a != b;
     [Test]
     public void TestNotEqualSameTypeBooleans()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = true;
 var b = false;
 a != b;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -482,14 +409,13 @@ a != b;
     [Test]
     public void TestGreaterDifferentTypesAllowed()
     {
-        var env = new Script2Environment();
         // > 运算符不应该抛出类型不匹配错误
         var s = @"
 var num = 5;
 var str = ""hello"";
 num > 0;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -499,9 +425,8 @@ num > 0;
     [Test]
     public void TestLessDifferentTypesAllowed()
     {
-        var env = new Script2Environment();
         // < 运算符不应该抛出类型不匹配错误
-        var r = Script2Parser.Execute("10 < 20", env);
+        var r = Script2Parser.Execute("10 < 20", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -511,9 +436,8 @@ num > 0;
     [Test]
     public void TestGreaterEqualDifferentTypesAllowed()
     {
-        var env = new Script2Environment();
         // >= 运算符不应该抛出类型不匹配错误
-        var r = Script2Parser.Execute("10 >= 10", env);
+        var r = Script2Parser.Execute("10 >= 10", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 
@@ -523,9 +447,8 @@ num > 0;
     [Test]
     public void TestLessEqualDifferentTypesAllowed()
     {
-        var env = new Script2Environment();
         // <= 运算符不应该抛出类型不匹配错误
-        var r = Script2Parser.Execute("5 <= 10", env);
+        var r = Script2Parser.Execute("5 <= 10", _env);
         Assert.That(r, Is.EqualTo(true));
     }
 }

@@ -10,10 +10,14 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2ComplexScenarioTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -22,7 +26,6 @@ public class Script2ComplexScenarioTest(bool useInterpreter)
     [Test]
     public void TestFibonacci()
     {
-        var env = new Script2Environment();
         var s = @"
 fib(n) {
     if (n <= 1) {
@@ -32,7 +35,7 @@ fib(n) {
 }
 fib(6);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(8.0f));
     }
 
@@ -42,7 +45,6 @@ fib(6);
     [Test]
     public void TestFactorial()
     {
-        var env = new Script2Environment();
         var s = @"
 fact(n) {
     if (n <= 1) {
@@ -52,7 +54,7 @@ fact(n) {
 }
 fact(5);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(120.0f));
     }
 
@@ -62,7 +64,6 @@ fact(5);
     [Test]
     public void TestAccumulator()
     {
-        var env = new Script2Environment();
         var s = @"
 accumulator(n) {
     var sum = 0;
@@ -75,7 +76,7 @@ accumulator(n) {
 }
 accumulator(10);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(55.0f));
     }
 
@@ -85,7 +86,6 @@ accumulator(10);
     [Test]
     public void TestNestedFunctionCalls()
     {
-        var env = new Script2Environment();
         var s = @"
 add(a, b) { return a + b }
 mult(a, b) { return a * b }
@@ -94,7 +94,7 @@ result(a, b) {
 }
 result(5, 6);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(11.0f));
     }
 
@@ -104,7 +104,6 @@ result(5, 6);
     [Test]
     public void TestClosure()
     {
-        var env = new Script2Environment();
         var s = @"
 var x = 10;
 addX(a) {
@@ -112,7 +111,7 @@ addX(a) {
 }
 addX(5);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15.0f));
     }
 
@@ -122,7 +121,6 @@ addX(5);
     [Test]
     public void TestNestedConditions()
     {
-        var env = new Script2Environment();
         var s = @"
 grade(score) {
     if (score >= 90) {
@@ -141,7 +139,7 @@ grade(score) {
 }
 grade(85);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo("B"));
     }
 
@@ -151,7 +149,6 @@ grade(85);
     [Test]
     public void TestRecursionDepth()
     {
-        var env = new Script2Environment();
         var s = @"
 countDown(n) {
     if (n <= 0) {
@@ -161,7 +158,7 @@ countDown(n) {
 }
 countDown(5);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(5.0f));
     }
 
@@ -171,7 +168,6 @@ countDown(5);
     [Test]
     public void TestVariableSwap()
     {
-        var env = new Script2Environment();
         var s = @"
 var a = 5;
 var b = 10;
@@ -180,9 +176,9 @@ a = b;
 b = temp;
 a;
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(10.0f));
-        Assert.That(env.GetVariableValue("b"), Is.EqualTo(5.0f));
+        Assert.That(_env.GetVariableValue("b"), Is.EqualTo(5.0f));
     }
 
     /// <summary>
@@ -191,7 +187,6 @@ a;
     [Test]
     public void TestStringProcessing()
     {
-        var env = new Script2Environment();
         var s = @"
 greet(name) {
     var prefix = ""Hello, "";
@@ -202,7 +197,7 @@ greet(""World"");
 ";
         Assert.Catch<InvalidCastException>(() =>
         {
-            var r = Script2Parser.Execute(s, env);
+            var r = Script2Parser.Execute(s, _env);
         });
     }
 
@@ -212,7 +207,6 @@ greet(""World"");
     [Test]
     public void TestCalculator()
     {
-        var env = new Script2Environment();
         var s = @"
 calculate(a, b, op) {
     if (op == ""+"") {
@@ -231,7 +225,7 @@ calculate(a, b, op) {
 }
 calculate(10, 5, ""*"");
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(50.0f));
     }
 
@@ -241,7 +235,6 @@ calculate(10, 5, ""*"");
     [Test]
     public void TestFindMax()
     {
-        var env = new Script2Environment();
         var s = @"
 findMax(a, b, c) {
     var max = a;
@@ -255,7 +248,7 @@ findMax(a, b, c) {
 }
 findMax(3, 7, 5);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(7.0f));
     }
 
@@ -265,7 +258,6 @@ findMax(3, 7, 5);
     [Test]
     public void TestIsEven()
     {
-        var env = new Script2Environment();
         var s = @"
 isEven(n) {
     if (n % 2 == 0) {
@@ -275,7 +267,7 @@ isEven(n) {
 }
 isEven(4);
 ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(true));
     }
 }

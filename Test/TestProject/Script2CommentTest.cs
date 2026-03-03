@@ -7,10 +7,14 @@ namespace TestProject;
 [TestFixture(true)]
 public class Script2CommentTest(bool useInterpreter)
 {
+    private Script2Environment _env;
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = useInterpreter;
+        _env = new Script2Environment
+        {
+            UseInterpreterMode = useInterpreter
+        };
     }
 
     /// <summary>
@@ -19,13 +23,12 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestSingleLineComment()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 5 // 这是注释
     var y = 10 // 这也是注释
     x + y
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15.0f));
     }
 
@@ -35,7 +38,6 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentAtLineStart()
     {
-        var env = new Script2Environment();
         var s = @"
     // 注释行1
     // 注释行2
@@ -43,7 +45,7 @@ public class Script2CommentTest(bool useInterpreter)
     // 注释行3
     x
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(10.0f));
     }
 
@@ -53,14 +55,13 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentInExpression()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 5
     var y = 10
     x + // 中间注释
     y
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15.0f));
     }
 
@@ -70,14 +71,13 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentInFunction()
     {
-        var env = new Script2Environment();
         var s = @"
     add(a, b) { // 加法函数
         return a + b // 返回和
     }
     add(3, 5) // 调用函数
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(8.0f));
     }
 
@@ -87,12 +87,11 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestEmptyComment()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 5 //
     x
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(5.0f));
     }
 
@@ -102,13 +101,12 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentWithSpecialChars()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 5 // 注释包含!@#$%^&*()
     var y = 10 // 注释包含<>=+-
     x + y
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15.0f));
     }
 
@@ -118,13 +116,12 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentWithChinese()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 5 // 这是一个中文注释
     var y = 10 // 计算两个数的和
     x + y
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15.0f));
     }
 
@@ -134,13 +131,12 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestMultipleCommentsInSameLine()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 5 // 第一个注释
     var y = 10 // 第二个注释
     x + y // 第三个注释，但这行实际上不会执行
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(15.0f));
     }
 
@@ -150,7 +146,6 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentInIfStatement()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 10
     if (x > 5) { // 如果x大于5
@@ -158,7 +153,7 @@ public class Script2CommentTest(bool useInterpreter)
         y
     }
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(20.0f));
     }
 
@@ -168,7 +163,6 @@ public class Script2CommentTest(bool useInterpreter)
     [Test]
     public void TestCommentInWhileStatement()
     {
-        var env = new Script2Environment();
         var s = @"
     var x = 0
     var sum = 0
@@ -178,7 +172,7 @@ public class Script2CommentTest(bool useInterpreter)
     }
     sum
     ";
-        var r = Script2Parser.Execute(s, env);
+        var r = Script2Parser.Execute(s, _env);
         Assert.That(r, Is.EqualTo(3.0f));
     }
 }
