@@ -249,7 +249,11 @@ public class Script2Environment
     /// </summary>
     public Script2Environment CreateChildEnvironment()
     {
-        return new Script2Environment(_rootEnv ?? this);
+        var newEnv = new Script2Environment(_rootEnv ?? this)
+        {
+            UseInterpreterMode = UseInterpreterMode
+        };
+        return newEnv;
     }
 
     /// <summary>
