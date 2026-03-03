@@ -173,16 +173,15 @@ public class ExpressionInterpreter
                 // 我们需要将参数传递给解释器
                 // 这需要修改解释器以支持参数传递
                 // 作为临时解决方案，我们可以使用 Environment 来存储参数
-                // var childEnv = capturedEnv.CreateChildEnvironment();
-                // for (int i = 0; i < args.Length; i++)
-                // {
-                //     childEnv.SetVariableValue(lambdaExpr.Parameters[i].Name ?? $"arg{i}", args[i]);
-                // }
+                var childEnv = capturedEnv.CreateChildEnvironment();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    childEnv.SetVariableValue(lambdaExpr.Parameters[i].Name ?? $"arg{i}", args[i]);
+                }
 
                 // 使用子环境来执行 Lambda 表达式
-                // var paramInterpreter = new ExpressionInterpreter(childEnv);
-                // return paramInterpreter.Visit(lambdaExpr.Body);
-                return Visit(lambdaExpr.Body);
+                var paramInterpreter = new ExpressionInterpreter(childEnv);
+                return paramInterpreter.Visit(lambdaExpr.Body);
             });
 
             // 将 func 转换为正确的委托类型

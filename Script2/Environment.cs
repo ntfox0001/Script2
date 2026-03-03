@@ -124,7 +124,8 @@ public class Script2Environment
         {
             try
             {
-                result = func(args);
+                // 兼容解释器模式，解释器模式的函数固定为Func<object[], object>
+                result = func(UseInterpreterMode ? new object[]{args} : args);
             }
             catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null)
             {
