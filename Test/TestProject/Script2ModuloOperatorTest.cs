@@ -55,10 +55,10 @@ public class Script2ModuloOperatorTest(bool useInterpreter)
     public void TestModuloFloats()
     {
         var r1 = Script2Parser.Execute("10.5 % 3", _env);
-        Assert.That(r1, Is.EqualTo(1.0f).Within(0.001));
+        Assert.That(r1, Is.EqualTo(2.0f).Within(0.001));
 
         var r2 = Script2Parser.Execute("7.8 % 2.5", _env);
-        Assert.That(r2, Is.EqualTo(1.0f).Within(0.001));
+        Assert.That(r2, Is.EqualTo(2.0f).Within(0.001));
     }
 
     /// <summary>

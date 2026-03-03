@@ -210,11 +210,11 @@ public class ExpressionInterpreter
 
         if (convert.Type == typeof(float))
         {
-            return Convert.ToSingle(operand);
+            return String2Float(operand);
         }
         else if (convert.Type == typeof(int))
         {
-            return Convert.ToInt32(operand);
+            return String2Int(operand);
         }
         else if (convert.Type == typeof(object))
         {
@@ -491,37 +491,59 @@ public class ExpressionInterpreter
 
     #region 运算符实现
 
+    private static float String2Float(object val)
+    {
+        try
+        {
+            return Convert.ToSingle(val);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidCastException($"Failed to convert. value: {val} ({val.GetType().Name}) to float.", ex);
+        }
+    }
+    private static int String2Int(object val)
+    {
+        try
+        {
+            return Convert.ToInt32(val);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidCastException($"Failed to convert. value: {val} to int.", ex);
+        }
+    }
     private static float Add(object left, object right)
     {
-        return Convert.ToSingle(left) + Convert.ToSingle(right);
+        return String2Float(left) + String2Float(right);
     }
 
     private static float Subtract(object left, object right)
     {
-        return Convert.ToSingle(left) - Convert.ToSingle(right);
+        return String2Float(left) - String2Float(right);
     }
 
     private static float Multiply(object left, object right)
     {
-        return Convert.ToSingle(left) * Convert.ToSingle(right);
+        return String2Float(left) * String2Float(right);
     }
 
     private static float Divide(object left, object right)
     {
-        return Convert.ToSingle(left) / Convert.ToSingle(right);
+        return String2Float(left) / String2Float(right);
     }
 
     private static float Modulo(object left, object right)
     {
-        return Convert.ToInt32(left) % Convert.ToInt32(right);
+        return String2Int(left) % String2Int(right);
     }
 
     private static bool Compare(object left, object right, bool greater)
     {
         Script2Environment.CheckTypesForEquality(left, right);
 
-        var leftFloat = Convert.ToSingle(left);
-        var rightFloat = Convert.ToSingle(right);
+        var leftFloat = String2Float(left);
+        var rightFloat = String2Float(right);
 
         return greater ? leftFloat > rightFloat : leftFloat < rightFloat;
     }
@@ -530,8 +552,8 @@ public class ExpressionInterpreter
     {
         Script2Environment.CheckTypesForEquality(left, right);
 
-        var leftFloat = Convert.ToSingle(left);
-        var rightFloat = Convert.ToSingle(right);
+        var leftFloat = String2Float(left);
+        var rightFloat = String2Float(right);
 
         return leftFloat >= rightFloat;
     }
@@ -540,8 +562,8 @@ public class ExpressionInterpreter
     {
         Script2Environment.CheckTypesForEquality(left, right);
 
-        var leftFloat = Convert.ToSingle(left);
-        var rightFloat = Convert.ToSingle(right);
+        var leftFloat = String2Float(left);
+        var rightFloat = String2Float(right);
 
         return leftFloat <= rightFloat;
     }

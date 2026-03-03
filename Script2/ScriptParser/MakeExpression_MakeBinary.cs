@@ -9,11 +9,13 @@ internal partial class MakeExpression
         // 对于取模运算，使用整数运算
         if (binaryType == ExpressionType.Modulo)
         {
-            // 先转换为 float（因为值可能是 object 类型），再转换为 int
+            // 先转换为 float（因为值可能是 object 类型），再四舍五入转换为 int
             Expression leftAsFloat = left.Type == typeof(float) ? left : Expression.Convert(left, typeof(float));
             Expression rightAsFloat = right.Type == typeof(float) ? right : Expression.Convert(right, typeof(float));
-            Expression convertedLeft = Expression.Convert(leftAsFloat, typeof(int));
-            Expression convertedRight = Expression.Convert(rightAsFloat, typeof(int));
+            // 使用 MathF.Round 进行传统四舍五入（AwayFromZero）
+            var roundMethod = typeof(MathF).GetMethod(nameof(MathF.Round), new[] { typeof(float), typeof(MidpointRounding) });
+            Expression convertedLeft = Expression.Convert(Expression.Call(roundMethod!, leftAsFloat, Expression.Constant(MidpointRounding.AwayFromZero)), typeof(int));
+            Expression convertedRight = Expression.Convert(Expression.Call(roundMethod!, rightAsFloat, Expression.Constant(MidpointRounding.AwayFromZero)), typeof(int));
             var intResult = Expression.MakeBinary(binaryType, convertedLeft, convertedRight);
             // 将整数结果转回 float
             return Expression.Convert(intResult, typeof(float));
