@@ -18,7 +18,8 @@ public class Script2Environment
     private readonly Dictionary<string, object> _variables = new();
 
     // 函数字典（根环境拥有，子环境共享）
-    private readonly Dictionary<string, Func<object[], object>> _functions = new();
+    // 改为存储 Delegate，以便更好地处理不同类型的委托
+    private readonly Dictionary<string, Delegate> _functionDelegates = new();
 
     // 打印回调接口
     public Action<string> OnPrint { get; set; }
@@ -38,7 +39,7 @@ public class Script2Environment
     private Script2Environment(Script2Environment rootEnv)
     {
         _rootEnv = rootEnv;
-        _functions = rootEnv._functions; // 共享函数字典
+        _functionDelegates = rootEnv._functionDelegates; // 共享函数字典
         _variables = new Dictionary<string, object>(); // 独立的本地变量
     }
 
@@ -49,7 +50,7 @@ public class Script2Environment
 
         // 注册 print 函数（支持多个参数）
         // 使用 RegisterFunction 而不是 RegisterFunc，因为我们需要直接处理 args 数组
-        _functions["print"] = args =>
+        _functionDelegates["print"] = new Func<object[], object>(args =>
         {
             var output = string.Join("", args.Select(arg => arg?.ToString() ?? "null"));
             if (OnPrint != null)
@@ -61,16 +62,16 @@ public class Script2Environment
                 Console.WriteLine(output);
             }
             return VoidValue.Instance;
-        };
+        });
 
         // 注册 concat 函数（字符串连接）
-        _functions["concat"] = args =>
+        _functionDelegates["concat"] = new Func<object[], object>(args =>
         {
             return string.Join("", args.Select(arg => arg?.ToString() ?? ""));
-        };
+        });
 
         // 注册 format 函数（格式化字符串）
-        _functions["format"] = args =>
+        _functionDelegates["format"] = new Func<object[], object>(args =>
         {
             if (args.Length == 0)
                 return "";
@@ -81,7 +82,7 @@ public class Script2Environment
 
             var values = args.Skip(1).Select(arg => arg?.ToString() ?? "null").ToArray<object>();
             return string.Format(formatString, values);
-        };
+        });
     }
 
     /// <summary>
@@ -120,12 +121,12 @@ public class Script2Environment
     public object CallFunction(string fn, object[] args)
     {
         object result;
-        if (_functions.TryGetValue(fn, out var func))
+        if (_functionDelegates.TryGetValue(fn, out var func))
         {
             try
             {
-                // 兼容解释器模式，解释器模式的函数固定为Func<object[], object>
-                result = func(UseInterpreterMode ? new object[]{args} : args);
+                // 使用 DynamicInvoke 处理所有委托，避免类型转换问题
+                result = func.DynamicInvoke(args);
             }
             catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null)
             {
@@ -192,7 +193,7 @@ public class Script2Environment
     /// </summary>
     public bool HasFunction(string name)
     {
-        return _functions.ContainsKey(name);
+        return _functionDelegates.ContainsKey(name);
     }
 
     /// <summary>
@@ -203,7 +204,7 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        if (!_functions.TryAdd(name, func.DynamicInvoke))
+        if (!_functionDelegates.TryAdd(name, func))
         {
             throw new DuplicateNameException($"Function already exists: {name}");
         }
@@ -245,13 +246,13 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 0 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
 
             return func();
-        };
+        });
     }
 
     // 单个参数的函数注册（只能在根环境中注册）
@@ -260,14 +261,14 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 1 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
 
             var arg = Convertor.ConvertToTargetType<T1>(args[0]);
             return func(arg);
-        };
+        });
     }
 
     // 两个参数的函数注册（只能在根环境中注册）
@@ -276,14 +277,14 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 2 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 2 arguments.");
 
             var (arg1, arg2) = Convertor.ConvertToTargetTypes<T1, T2>(args[0], args[1], funcName);
             return func(arg1, arg2);
-        };
+        });
     }
 
     // 三个参数的函数注册（只能在根环境中注册）
@@ -292,14 +293,14 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 3 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 3 arguments.");
 
             var (arg1, arg2, arg3) = Convertor.ConvertToTargetTypes<T1, T2, T3>(args[0], args[1], args[2], funcName);
             return func(arg1, arg2, arg3);
-        };
+        });
     }
 
     // 四个参数的函数注册（只能在根环境中注册）
@@ -308,7 +309,7 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 4 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 4 arguments.");
@@ -316,7 +317,7 @@ public class Script2Environment
             var (arg1, arg2, arg3, arg4) =
                 Convertor.ConvertToTargetTypes<T1, T2, T3, T4>(args[0], args[1], args[2], args[3], funcName);
             return func(arg1, arg2, arg3, arg4);
-        };
+        });
     }
 
     // 无返回值的函数注册 - 0个参数（只能在根环境中注册）
@@ -325,14 +326,14 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 0 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 0 arguments.");
 
             func();
             return VoidValue.Instance;
-        };
+        });
     }
 
     // 无返回值的函数注册 - 1个参数（只能在根环境中注册）
@@ -341,7 +342,7 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 1 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 1 argument.");
@@ -349,7 +350,7 @@ public class Script2Environment
             var arg = Convertor.ConvertToTargetType<T1>(args[0]);
             func(arg);
             return VoidValue.Instance;
-        };
+        });
     }
 
     // 无返回值的函数注册 - 2个参数（只能在根环境中注册）
@@ -358,7 +359,7 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 2 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 2 arguments.");
@@ -366,7 +367,7 @@ public class Script2Environment
             var (arg1, arg2) = Convertor.ConvertToTargetTypes<T1, T2>(args[0], args[1], funcName);
             func(arg1, arg2);
             return VoidValue.Instance;
-        };
+        });
     }
 
     // 无返回值的函数注册 - 3个参数（只能在根环境中注册）
@@ -375,7 +376,7 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 3 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 3 arguments.");
@@ -383,7 +384,7 @@ public class Script2Environment
             var (arg1, arg2, arg3) = Convertor.ConvertToTargetTypes<T1, T2, T3>(args[0], args[1], args[2], funcName);
             func(arg1, arg2, arg3);
             return VoidValue.Instance;
-        };
+        });
     }
 
     // 无返回值的函数注册 - 4个参数（只能在根环境中注册）
@@ -392,7 +393,7 @@ public class Script2Environment
         if (_rootEnv != null)
             throw new InvalidOperationException("Functions can only be registered in the root environment.");
 
-        _functions[funcName] = args =>
+        _functionDelegates[funcName] = new Func<object[], object>(args =>
         {
             if (args is not { Length: 4 })
                 throw new InvalidOperationException($"Function '{funcName}' expects 4 arguments.");
@@ -401,6 +402,6 @@ public class Script2Environment
                 Convertor.ConvertToTargetTypes<T1, T2, T3, T4>(args[0], args[1], args[2], args[3], funcName);
             func(arg1, arg2, arg3, arg4);
             return VoidValue.Instance;
-        };
+        });
     }
 }

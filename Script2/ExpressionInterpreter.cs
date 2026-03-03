@@ -12,6 +12,16 @@ public class ExpressionInterpreter
     private readonly Script2Environment _env;
     private readonly Stack<Dictionary<ParameterExpression, object>> _variableScopes;
 
+    private class BreakException : Exception
+    {
+        public object Value { get; }
+
+        public BreakException(object value)
+        {
+            Value = value;
+        }
+    }
+
     public ExpressionInterpreter(Script2Environment env)
     {
         _env = env;
@@ -65,6 +75,7 @@ public class ExpressionInterpreter
             ExpressionType.MemberAccess => VisitMemberAccess((MemberExpression)expr),
             ExpressionType.Conditional => VisitConditional((ConditionalExpression)expr),
             ExpressionType.Loop => VisitLoop((LoopExpression)expr),
+            ExpressionType.Goto => VisitGoto((GotoExpression)expr),
             ExpressionType.IsFalse => VisitIsFalse((UnaryExpression)expr),
             _ => throw new NotSupportedException($"Expression type '{expr.NodeType}' is not supported by the interpreter.")
         };
@@ -349,6 +360,19 @@ public class ExpressionInterpreter
             }
         }
 
+        // 对于函数参数，尝试从当前环境中获取变量值
+        if (!string.IsNullOrEmpty(parameter.Name))
+        {
+            try
+            {
+                return _env.GetVariableValue(parameter.Name);
+            }
+            catch (InvalidOperationException)
+            {
+                // 变量未定义，继续返回 null
+            }
+        }
+
         // 对于函数参数，在实际调用函数时会通过闭包处理
         // 这里暂时返回 null
         return null;
@@ -417,17 +441,33 @@ public class ExpressionInterpreter
 
         while (true)
         {
-            var result = Visit(loop.Body);
-
-            // 如果遇到 ReturnValueException，抛出它
-            if (result is ReturnValueException ex)
+            try
             {
-                throw ex;
-            }
+                var result = Visit(loop.Body);
 
-            // 这里没有 break 条件，实际应用中应该有
-            // 如果需要 break/continue，需要额外的机制
+                // 如果遇到 ReturnValueException，抛出它
+                if (result is ReturnValueException ex)
+                {
+                    throw ex;
+                }
+            }
+            catch (BreakException ex)
+            {
+                // 遇到 break 语句，退出循环并返回 break 的值
+                return ex.Value;
+            }
         }
+    }
+
+    private object VisitGoto(GotoExpression gotoExpr)
+    {
+        // 目前只支持 break 语句
+        if (gotoExpr.Kind == GotoExpressionKind.Break)
+        {
+            object value = gotoExpr.Value != null ? Visit(gotoExpr.Value) : null;
+            throw new BreakException(value);
+        }
+        throw new NotSupportedException($"Goto kind {gotoExpr.Kind} is not supported by the interpreter.");
     }
 
     #region 运算符实现
