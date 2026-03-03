@@ -330,6 +330,65 @@ format("{0} + {1} = {2}", 2, 3, 5); // 返回 "2 + 3 = 5"
 
 - .NET 7.0 或更高版本
 - 依赖库: Superpower (解析器组合子库)
+- **Unity IL2CPP**: 支持使用解释器模式
+
+## 执行模式选择
+
+Script2 提供两种执行模式，由开发者根据运行环境选择：
+
+### 编译模式（默认，推荐用于 .NET 环境）
+
+使用 `Expression.Compile()` 编译表达式树，执行速度最快。
+
+```csharp
+var env = new Script2Environment();
+Script2Parser.UseInterpreterMode = false; // 默认值
+var result = Script2Parser.Execute("3 + 5 * 2", env);
+```
+
+**适用场景**：
+- ✅ .NET / .NET Core 环境
+- ✅ Unity Editor 模式
+- ✅ Unity Mono 后端
+- ❌ Unity IL2CPP 后端（不支持 `Expression.Compile()`）
+
+### 解释器模式（兼容 IL2CPP）
+
+不编译表达式树，直接解释执行，兼容 IL2CPP 但速度较慢。
+
+```csharp
+var env = new Script2Environment();
+Script2Parser.UseInterpreterMode = true; // 启用解释器模式
+var result = Script2Parser.Execute("3 + 5 * 2", env);
+```
+
+**适用场景**：
+- ✅ Unity IL2CPP 后端
+- ✅ 需要跨平台的 Unity 项目
+- ⚠️ 执行速度比编译模式慢约 10-100 倍
+
+### Unity 项目推荐配置
+
+```csharp
+using UnityEngine;
+using Script2;
+
+public class Script2Setup : MonoBehaviour
+{
+    void Awake()
+    {
+#if UNITY_EDITOR || !ENABLE_IL2CPP
+        // Editor 或 Mono 构建：使用编译模式（快速）
+        Script2Parser.UseInterpreterMode = false;
+#else
+        // IL2CPP 构建：使用解释器模式（兼容）
+        Script2Parser.UseInterpreterMode = true;
+#endif
+
+        Debug.Log($"Script2 using interpreter mode: {Script2Parser.UseInterpreterMode}");
+    }
+}
+```
 
 ## 许可证
 
