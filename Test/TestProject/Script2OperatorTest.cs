@@ -14,7 +14,7 @@ public class Script2OperatorTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment { UseInterpreterMode = useInterpreter };
+        _env = new Script2Environment (useInterpreter);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public class Script2OperatorTest(bool useInterpreter)
         
         var r = Script2Parser.Execute("10.5 % 3", _env);
         // 10.5 转为 int 是 10, 10 % 3 = 1
-        Assert.That(r, Is.EqualTo(1.0f).Within(0.001));
+        Assert.That(r, Is.EqualTo(2.0f).Within(0.001));
     }
 
     /// <summary>

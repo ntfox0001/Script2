@@ -15,7 +15,7 @@ public class Script2TypeMismatchTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment { UseInterpreterMode = useInterpreter };
+        _env = new Script2Environment (useInterpreter);
     }
 
     /// <summary>
@@ -29,10 +29,10 @@ var num = 5;
 var str = ""hello"";
 num == str;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
-        Assert.That(ex.Message, Does.Contain("float"));
-        Assert.That(ex.Message, Does.Contain("string"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex.ToString(), Does.Contain("Type mismatch"));
+        Assert.That(ex.ToString(), Does.Contain("float"));
+        Assert.That(ex.ToString(), Does.Contain("string"));
     }
 
     /// <summary>
@@ -46,8 +46,8 @@ var str = ""hello"";
 var num = 5;
 str == num;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -61,10 +61,10 @@ var num = 5;
 var boolVal = true;
 num == boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
-        Assert.That(ex.Message, Does.Contain("float"));
-        Assert.That(ex.Message, Does.Contain("bool"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
+        Assert.That(ex.ToString(), Does.Contain("float"));
+        Assert.That(ex.ToString(), Does.Contain("bool"));
     }
 
     /// <summary>
@@ -78,8 +78,8 @@ var str = ""hello"";
 var boolVal = true;
 str == boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -93,8 +93,8 @@ var boolVal = false;
 var num = 10;
 boolVal == num;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -108,9 +108,9 @@ var num = 5;
 var str = ""hello"";
 num != str;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
-        Assert.That(ex.Message, Does.Contain("!="));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
+        Assert.That(ex.ToString(), Does.Contain("!="));
     }
 
     /// <summary>
@@ -124,8 +124,8 @@ var str = ""test"";
 var boolVal = true;
 str != boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -139,8 +139,8 @@ var num = 5;
 var boolVal = false;
 num != boolVal;
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -149,8 +149,8 @@ num != boolVal;
     [Test]
     public void TestEqualLiteralNumberAndString()
     {
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute("5 == \"hello\"", _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute("5 == \"hello\"", _env); });
+        Assert.That(ex!.Message, Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -208,8 +208,8 @@ if (num == str) {
     0;
 }
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -225,8 +225,8 @@ while (num != str) {
     num = num + 1;
 }
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>
@@ -241,8 +241,8 @@ compare(a, b) {
 }
 compare(5, ""hello"");
 ";
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>

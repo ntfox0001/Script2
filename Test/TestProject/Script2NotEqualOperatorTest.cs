@@ -15,7 +15,7 @@ public class Script2NotEqualOperatorTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment { UseInterpreterMode = useInterpreter };
+        _env = new Script2Environment (useInterpreter);
     }
 
     /// <summary>
@@ -318,8 +318,8 @@ var num = 5;
 str != num;
 ";
         // 字符串 "5" 和数字 5 类型不同，应该抛出类型不匹配错误
-        var ex = Assert.Throws<InvalidOperationException>(() => { Script2Parser.Execute(s, _env); });
-        Assert.That(ex.Message, Does.Contain("Type mismatch"));
+        var ex = AssertEx.Throws<InvalidOperationException, System.Reflection.TargetInvocationException>(() => { Script2Parser.Execute(s, _env); });
+        Assert.That(ex!.ToString(), Does.Contain("Type mismatch"));
     }
 
     /// <summary>

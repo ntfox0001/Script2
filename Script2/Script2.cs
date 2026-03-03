@@ -2,8 +2,12 @@
 
 public class Script2 : IScript2
 {
-    private readonly Script2Environment _env = new();
+    private readonly Script2Environment _env;
 
+    public Script2(bool useInterpreterMode)
+    {
+        _env = new Script2Environment(useInterpreterMode);
+    }
     /// <summary>
     /// 打印回调接口，用于自定义 print 函数的输出行为
     /// </summary>

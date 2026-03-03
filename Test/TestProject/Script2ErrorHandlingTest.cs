@@ -14,10 +14,7 @@ public class Script2ErrorHandlingTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment
-        {
-            UseInterpreterMode = useInterpreter
-        };
+        _env = new Script2Environment(useInterpreter);
     }
 
     /// <summary>
@@ -104,7 +101,7 @@ var result = noReturn();
     [Test]
     public void TestRegisterFuncInChildEnv()
     {
-        var rootEnv = new Script2Environment();
+        var rootEnv = new Script2Environment(useInterpreter);
         var childEnv = rootEnv.CreateChildEnvironment();
         Assert.Throws<InvalidOperationException>(() =>
         {

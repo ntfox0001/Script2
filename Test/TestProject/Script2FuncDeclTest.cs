@@ -11,10 +11,7 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment
-        {
-            UseInterpreterMode = useInterpreter
-        };
+        _env = new Script2Environment(useInterpreter);
     }
 
     /// <summary>
@@ -193,7 +190,7 @@ public class Script2FuncDeclTest(bool useInterpreter)
     [Test]
     public void TestCallFunc1()
     {
-        Script2.Script2 s2 = new Script2.Script2();
+        Script2.Script2 s2 = new Script2.Script2(useInterpreter);
 
         var s = @"
     returnTwo() {

@@ -10,7 +10,7 @@ public class Script2Environment
     /// false: 使用编译模式（快速，但需要 .NET 运行时支持 Expression.Compile）
     /// 默认为 false，在 Unity IL2CPP 环境中请手动设置为 true
     /// </summary>
-    public bool UseInterpreterMode { get; set; } = false;
+    public bool UseInterpreterMode { get; private set; } = false;
     // 根环境，所有子环境共享
     private readonly Script2Environment _rootEnv = null;
 
@@ -27,8 +27,9 @@ public class Script2Environment
     /// <summary>
     /// 构造函数 - 创建根环境
     /// </summary>
-    public Script2Environment()
+    public Script2Environment(bool useInterpreterMode)
     {
+        UseInterpreterMode = useInterpreterMode;
         // 根环境的 _rootEnv 为 null
         Setup();
     }
@@ -50,7 +51,7 @@ public class Script2Environment
 
         // 注册 print 函数（支持多个参数）
         // 使用 RegisterFunction 而不是 RegisterFunc，因为我们需要直接处理 args 数组
-        _functions["print"] = new Func<object[], object>(args =>
+        AddFunc("print", new Func<object[], object>(args =>
         {
             var output = string.Join("", args.Select(arg => arg?.ToString() ?? "null"));
             if (OnPrint != null)
@@ -62,16 +63,16 @@ public class Script2Environment
                 Console.WriteLine(output);
             }
             return VoidValue.Instance;
-        });
+        }));
 
         // 注册 concat 函数（字符串连接）
-        _functions["concat"] = new Func<object[], object>(args =>
+        AddFunc("concat", new Func<object[], object>(args =>
         {
             return string.Join("", args.Select(arg => arg?.ToString() ?? ""));
-        });
+        }));
 
         // 注册 format 函数（格式化字符串）
-        _functions["format"] = new Func<object[], object>(args =>
+        AddFunc("format", new Func<object[], object>(args =>
         {
             if (args.Length == 0)
                 return "";
@@ -82,7 +83,7 @@ public class Script2Environment
 
             var values = args.Skip(1).Select(arg => arg?.ToString() ?? "null").ToArray<object>();
             return string.Format(formatString, values);
-        });
+        }));
     }
 
     /// <summary>

@@ -11,10 +11,7 @@ public class Script2ExtenalFuncTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment
-        {
-            UseInterpreterMode = useInterpreter
-        };
+        _env = new Script2Environment(useInterpreter);
     }
 
     [Test]

@@ -11,10 +11,7 @@ public class Script2WhileTest(bool useInterpreter)
     [SetUp]
     public void SetUp()
     {
-        _env = new Script2Environment
-        {
-            UseInterpreterMode = useInterpreter
-        };
+        _env = new Script2Environment(useInterpreter);
     }
     /// <summary>
     /// 测试while循环条件为假时不执行
