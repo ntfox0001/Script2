@@ -3,8 +3,16 @@ using Script2;
 
 namespace TestProject;
 
-public class Script2CallFuncTest
+[TestFixture(true)]
+[TestFixture(false)]
+public class Script2CallFuncTest(bool useInterpreter)
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = useInterpreter;
+    }
+
     [Test]
     public void TestCallFunc_WithNoArgs()
     {

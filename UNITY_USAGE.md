@@ -22,6 +22,8 @@
 
 ### 2. 配置执行模式
 
+⚠️ **重要提示**：IL2CPP 解释器模式仍在开发中，目前建议使用 Unity Mono 后端。
+
 在 Unity 项目中，根据构建目标选择合适的执行模式：
 
 ```csharp
@@ -36,8 +38,9 @@ public class Script2Setup : MonoBehaviour
         // Editor 或 Mono 构建：使用编译模式（快速）
         Script2Parser.UseInterpreterMode = false;
 #else
-        // IL2CPP 构建：使用解释器模式（兼容）
-        Script2Parser.UseInterpreterMode = true;
+        // IL2CPP 构建：解释器模式仍在开发中，暂不推荐
+        Debug.LogWarning("Script2 IL2CPP support is under development. Please use Mono backend for now.");
+        // Script2Parser.UseInterpreterMode = true; // 待完善后启用
 #endif
 
         Debug.Log($"Script2 using interpreter mode: {Script2Parser.UseInterpreterMode}");

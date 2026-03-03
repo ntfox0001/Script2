@@ -5,6 +5,12 @@ namespace TestProject;
 
 public class Script2ReturnTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试 return 立即退出函数，不执行后续语句
     /// </summary>

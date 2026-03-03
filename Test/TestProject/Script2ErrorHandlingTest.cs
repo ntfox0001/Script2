@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2ErrorHandlingTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试未定义的变量
     /// </summary>

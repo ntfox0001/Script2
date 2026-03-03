@@ -5,6 +5,12 @@ namespace TestProject;
 
 public class Script2ParserTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试内建函数调用
     /// </summary>

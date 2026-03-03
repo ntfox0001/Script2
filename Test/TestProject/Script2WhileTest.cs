@@ -5,6 +5,11 @@ namespace TestProject;
 
 public class Script2WhileTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
     /// <summary>
     /// 测试while循环条件为假时不执行
     /// </summary>

@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2TypeMismatchTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试 == 运算符 - 数字与字符串比较应该报错
     /// </summary>

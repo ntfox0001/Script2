@@ -5,6 +5,12 @@ namespace TestProject;
 
 public class Script2ExtenalFuncTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     [Test]
     public void TestMaxFunc1()
     {

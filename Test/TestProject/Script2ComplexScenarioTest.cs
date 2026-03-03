@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2ComplexScenarioTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试斐波那契数列
     /// </summary>

@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2ModuloOperatorTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试 % - 基本运算 10 % 3
     /// </summary>

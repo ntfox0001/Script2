@@ -5,6 +5,12 @@ namespace TestProject;
 
 public class Script2VarTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     [Test]
     public void TestWhileLoop1()
     {

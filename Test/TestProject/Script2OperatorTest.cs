@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2OperatorTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试加法
     /// </summary>

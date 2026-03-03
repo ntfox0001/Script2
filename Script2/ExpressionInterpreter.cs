@@ -10,10 +10,12 @@ namespace Script2;
 public class ExpressionInterpreter
 {
     private readonly Script2Environment _env;
+    private readonly Stack<Dictionary<ParameterExpression, object>> _variableScopes;
 
     public ExpressionInterpreter(Script2Environment env)
     {
         _env = env;
+        _variableScopes = new Stack<Dictionary<ParameterExpression, object>>();
     }
 
     /// <summary>
@@ -71,7 +73,8 @@ public class ExpressionInterpreter
     private object VisitLambda(LambdaExpression lambda)
     {
         // Lambda 表达式的 body 才是真正要执行的代码
-        return Visit(lambda.Body);
+        var result = Visit(lambda.Body);
+        return result;
     }
 
     private object VisitConstant(ConstantExpression constant)
@@ -108,6 +111,10 @@ public class ExpressionInterpreter
             {
                 var fn = args[0] as string;
                 var fnArgs = args[1] as object[];
+                if (fnArgs == null)
+                {
+                    throw new InvalidCastException($"Expected object[] for function arguments, but got {args[1]?.GetType()}");
+                }
                 return envInstance.CallFunction(fn, fnArgs);
             }
             else if (call.Method.Name == nameof(Script2Environment.CreateChildEnvironment))
@@ -142,6 +149,48 @@ public class ExpressionInterpreter
 
     private object VisitConvert(UnaryExpression convert)
     {
+            // 处理 LambdaExpression -> Delegate 的转换
+        if (convert.Type == typeof(Delegate) && convert.Operand is LambdaExpression lambdaExpr)
+        {
+            // 创建一个包装的委托，它会使用解释器来执行 Lambda 表达式
+            // 需要捕获当前的 _env
+            var capturedEnv = _env;
+
+            // 获取 Lambda 表达式的参数数量
+            var paramCount = lambdaExpr.Parameters.Count;
+
+            // 创建一个委托，当被调用时，使用解释器来执行 Lambda 表达式
+            var func = new Func<object[], object>(args =>
+            {
+                // 创建一个新的解释器实例，使用捕获的环境
+                var interpreter = new ExpressionInterpreter(capturedEnv);
+
+                // 为了处理函数参数，我们需要设置参数的值
+                // 但当前的实现不支持这个，我们需要添加参数传递
+                // 暂时，我们只能处理无参数的 Lambda
+                if (args.Length != paramCount)
+                {
+                    throw new ArgumentException($"Expected {paramCount} arguments, but got {args.Length}");
+                }
+
+                // 我们需要将参数传递给解释器
+                // 这需要修改解释器以支持参数传递
+                // 作为临时解决方案，我们可以使用 Environment 来存储参数
+                var childEnv = capturedEnv.CreateChildEnvironment();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    childEnv.SetVariableValue(lambdaExpr.Parameters[i].Name ?? $"arg{i}", args[i]);
+                }
+
+                // 使用子环境来执行 Lambda 表达式
+                var paramInterpreter = new ExpressionInterpreter(childEnv);
+                return paramInterpreter.Visit(lambdaExpr.Body);
+            });
+
+            // 将 func 转换为正确的委托类型
+            return func;
+        }
+
         var operand = Visit(convert.Operand);
 
         if (operand == null)
@@ -158,6 +207,13 @@ public class ExpressionInterpreter
         else if (convert.Type == typeof(object))
         {
             return operand;
+        }
+        else if (convert.Type == typeof(Delegate))
+        {
+            // 如果 operand 已经是 Delegate 类型，直接返回
+            if (operand is Delegate del)
+                return del;
+            throw new InvalidCastException($"Cannot convert {operand.GetType()} to Delegate");
         }
 
         return Convert.ChangeType(operand, convert.Type);
@@ -196,11 +252,25 @@ public class ExpressionInterpreter
         // 右侧先计算
         var value = Visit(assign.Right);
 
+        // 左侧是 ParameterExpression（局部变量赋值）
+        if (assign.Left is ParameterExpression paramExpr)
+        {
+            // 从变量作用域中找到变量并赋值
+            foreach (var scope in _variableScopes)
+            {
+                if (scope.ContainsKey(paramExpr))
+                {
+                    scope[paramExpr] = value;
+                    return value;
+                }
+            }
+            throw new InvalidOperationException($"Variable '{paramExpr.Name}' is not defined in current scope.");
+        }
+
         // 左侧需要是方法调用（如 SetVariableValue）
         if (assign.Left is MethodCallExpression call)
         {
             VisitMethodCall(call);
-            return null;
         }
 
         return value;
@@ -208,11 +278,29 @@ public class ExpressionInterpreter
 
     private object VisitBlock(BlockExpression block)
     {
+        // 创建新的变量作用域
+        var variableValues = new Dictionary<ParameterExpression, object>();
+
+        // 如果 block 有变量，初始化它们（如果需要）
+        foreach (var var in block.Variables)
+        {
+            // 局部变量初始化为 null
+            variableValues[var] = null;
+        }
+
+        // 将变量作用域压栈
+        _variableScopes.Push(variableValues);
+
         object result = null;
+
         foreach (var expr in block.Expressions)
         {
             result = Visit(expr);
         }
+
+        // 弹出变量作用域
+        _variableScopes.Pop();
+
         return result;
     }
 
@@ -249,9 +337,23 @@ public class ExpressionInterpreter
 
     private object VisitParameter(ParameterExpression parameter)
     {
-        // 参数在解释器中需要特殊的处理
-        // 在 lambda 解释时，我们通过闭包来处理参数
-        // 这里暂时返回 null，实际使用时需要在 lambda 解释中处理
+        // 处理环境参数
+        if (parameter.Type == typeof(Script2Environment))
+        {
+            return _env;
+        }
+
+        // 从变量作用域中查找
+        foreach (var scope in _variableScopes)
+        {
+            if (scope.TryGetValue(parameter, out var value))
+            {
+                return value;
+            }
+        }
+
+        // 对于函数参数，在实际调用函数时会通过闭包处理
+        // 这里暂时返回 null
         return null;
     }
 
@@ -278,6 +380,15 @@ public class ExpressionInterpreter
         if (newExpr.Constructor != null)
         {
             return newExpr.Constructor.Invoke(args);
+        }
+
+        // 如果没有构造函数，可能是通过转换创建委托
+        // 处理 LambdaExpression -> Delegate 的转换
+        if (newExpr.Type == typeof(Delegate) && args.Length == 1)
+        {
+            // 这种情况不应该发生，因为 LambdaExpression -> Delegate 的转换应该通过 Convert 处理
+            // 如果发生了，说明表达式树有问题
+            throw new InvalidOperationException("Cannot create Delegate directly without constructor. Use Convert instead.");
         }
 
         throw new NotSupportedException($"New expression without constructor is not supported.");

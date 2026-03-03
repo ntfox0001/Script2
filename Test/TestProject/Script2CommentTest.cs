@@ -5,6 +5,12 @@ namespace TestProject;
 
 public class Script2CommentTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试单行注释 - 基本功能
     /// </summary>

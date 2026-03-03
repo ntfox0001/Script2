@@ -3,8 +3,16 @@ using Script2;
 
 namespace TestProject;
 
-public class Script2FuncDeclTest
+[TestFixture(true)]
+// [TestFixture(false)]
+public class Script2FuncDeclTest(bool useInterpreter)
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = useInterpreter;
+    }
+
     /// <summary>
     /// 测试函数声明和调用
     /// </summary>

@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2NotEqualOperatorTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试 != - 基本数字比较
     /// </summary>

@@ -8,6 +8,12 @@ namespace TestProject;
 /// </summary>
 public class Script2MathFuncTest
 {
+    [SetUp]
+    public void SetUp()
+    {
+        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+    }
+
     /// <summary>
     /// 测试 Abs 函数
     /// </summary>
