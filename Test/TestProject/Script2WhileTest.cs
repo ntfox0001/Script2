@@ -3,12 +3,14 @@ using Script2;
 
 namespace TestProject;
 
-public class Script2WhileTest
+[TestFixture(false)]
+[TestFixture(true)]
+public class Script2WhileTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
     /// <summary>
     /// 测试while循环条件为假时不执行

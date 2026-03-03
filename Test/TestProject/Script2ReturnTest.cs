@@ -3,12 +3,14 @@ using Script2;
 
 namespace TestProject;
 
-public class Script2ReturnTest
+[TestFixture(false)]
+[TestFixture(true)]
+public class Script2ReturnTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     /// <summary>

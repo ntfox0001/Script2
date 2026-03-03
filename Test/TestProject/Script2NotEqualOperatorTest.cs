@@ -6,12 +6,14 @@ namespace TestProject;
 /// <summary>
 /// 测试 != 运算符
 /// </summary>
-public class Script2NotEqualOperatorTest
+[TestFixture(false)]
+[TestFixture(true)]
+public class Script2NotEqualOperatorTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     /// <summary>

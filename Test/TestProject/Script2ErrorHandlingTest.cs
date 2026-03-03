@@ -6,12 +6,14 @@ namespace TestProject;
 /// <summary>
 /// 测试错误处理
 /// </summary>
-public class Script2ErrorHandlingTest
+[TestFixture(true)]
+[TestFixture(false)]
+public class Script2ErrorHandlingTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     /// <summary>

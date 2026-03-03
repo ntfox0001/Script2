@@ -6,12 +6,14 @@ namespace TestProject;
 /// <summary>
 /// 测试 % 取模运算符
 /// </summary>
-public class Script2ModuloOperatorTest
+[TestFixture(true)]
+[TestFixture(false)]
+public class Script2ModuloOperatorTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     /// <summary>

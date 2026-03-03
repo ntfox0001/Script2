@@ -6,12 +6,14 @@ namespace TestProject;
 /// <summary>
 /// 测试复杂场景和综合用例
 /// </summary>
-public class Script2ComplexScenarioTest
+[TestFixture(false)]
+[TestFixture(true)]
+public class Script2ComplexScenarioTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     /// <summary>

@@ -6,12 +6,14 @@ namespace TestProject;
 /// <summary>
 /// 测试 MathF 内建函数
 /// </summary>
-public class Script2MathFuncTest
+[TestFixture(false)]
+[TestFixture(true)]
+public class Script2MathFuncTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     /// <summary>

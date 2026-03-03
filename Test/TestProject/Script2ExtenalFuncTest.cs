@@ -3,12 +3,14 @@ using Script2;
 
 namespace TestProject;
 
-public class Script2ExtenalFuncTest
+[TestFixture(true)]
+[TestFixture(false)]
+public class Script2ExtenalFuncTest(bool useInterpreter)
 {
     [SetUp]
     public void SetUp()
     {
-        Script2Parser.UseInterpreterMode = UseInterpreter.Use;
+        Script2Parser.UseInterpreterMode = useInterpreter;
     }
 
     [Test]
