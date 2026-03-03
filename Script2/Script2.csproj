@@ -5,6 +5,21 @@
     <Nullable>disable</Nullable>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>11</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>Script2</Title>
+    <Description>一个轻量级的脚本解析器，使用 C# 编写，基于表达式树（Expression Tree）实现脚本解析和执行</Description>
+    <Authors>ntfox</Authors>
+    <Company>GoFire</Company>
+    <Product>Script2</Product>
+    <Copyright>Copyright © $([System.DateTime]::Now.Year)</Copyright>
+    <PackageProjectUrl>https://github.com/ntfox0001/Script2</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>script parser expression-tree csharp dotnet</PackageTags>
+    <RepositoryUrl>https://github.com/ntfox0001/Script2</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
