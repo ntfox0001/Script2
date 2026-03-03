@@ -51,6 +51,8 @@ public class ExpressionInterpreter
             ExpressionType.NewArrayInit => VisitNewArray((NewArrayExpression)expr),
             ExpressionType.New => VisitNew((NewExpression)expr),
             ExpressionType.Convert => VisitConvert((UnaryExpression)expr),
+            ExpressionType.Negate => VisitNegate((UnaryExpression)expr),
+            ExpressionType.NegateChecked => VisitNegate((UnaryExpression)expr),
             ExpressionType.Add => VisitBinary((BinaryExpression)expr),
             ExpressionType.AddChecked => VisitBinary((BinaryExpression)expr),
             ExpressionType.Subtract => VisitBinary((BinaryExpression)expr),
@@ -76,6 +78,7 @@ public class ExpressionInterpreter
             ExpressionType.Conditional => VisitConditional((ConditionalExpression)expr),
             ExpressionType.Loop => VisitLoop((LoopExpression)expr),
             ExpressionType.Goto => VisitGoto((GotoExpression)expr),
+            ExpressionType.Not => VisitNot((UnaryExpression)expr),
             ExpressionType.IsFalse => VisitIsFalse((UnaryExpression)expr),
             _ => throw new NotSupportedException($"Expression type '{expr.NodeType}' is not supported by the interpreter.")
         };
@@ -226,6 +229,15 @@ public class ExpressionInterpreter
         }
 
         return Convert.ChangeType(operand, convert.Type);
+    }
+
+    private object VisitNegate(UnaryExpression negate)
+    {
+        var operand = Visit(negate.Operand);
+        if (operand == null)
+            return null;
+        // 使用 Convert.ToSingle 以保持与现有运算符的一致性
+        return -Convert.ToSingle(operand);
     }
 
     private object VisitBinary(BinaryExpression binary)
@@ -424,6 +436,12 @@ public class ExpressionInterpreter
             return !boolValue;
         }
         return !(bool)Convert.ChangeType(value, typeof(bool));
+    }
+
+    private object VisitNot(UnaryExpression notExpr)
+    {
+        // 逻辑非操作，与 IsFalse 相同
+        return VisitIsFalse(notExpr);
     }
 
     private object VisitConditional(ConditionalExpression conditional)
