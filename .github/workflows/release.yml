@@ -19,10 +19,10 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore Script2/Script2.csproj
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build Script2/Script2.csproj --configuration Release
+        run: dotnet build --configuration Release
 
       - name: Run Tests
         run: dotnet test --configuration Release --no-build
