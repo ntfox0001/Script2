@@ -55,6 +55,26 @@ public class Script2Environment
             }
             return VoidValue.Instance;
         };
+
+        // 注册 concat 函数（字符串连接）
+        _functions["concat"] = args =>
+        {
+            return string.Join("", args.Select(arg => arg?.ToString() ?? ""));
+        };
+
+        // 注册 format 函数（格式化字符串）
+        _functions["format"] = args =>
+        {
+            if (args.Length == 0)
+                return "";
+
+            var formatString = args[0]?.ToString() ?? "";
+            if (args.Length == 1)
+                return formatString;
+
+            var values = args.Skip(1).Select(arg => arg?.ToString() ?? "null").ToArray<object>();
+            return string.Format(formatString, values);
+        };
     }
 
     /// <summary>

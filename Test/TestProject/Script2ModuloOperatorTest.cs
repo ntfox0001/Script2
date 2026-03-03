@@ -367,4 +367,89 @@ result;
         var r = Script2Parser.Execute(s, env);
         Assert.That(r, Is.EqualTo(0));
     }
+
+    /// <summary>
+    /// 测试 % - 字符串变量 % 数字变量应该报错
+    /// </summary>
+    [Test]
+    public void TestModulusStringVarAndNumberVar()
+    {
+        var env = new Script2Environment();
+        var s = @"
+var str = ""hello"";
+var num = 3;
+str % num;
+";
+        var ex = Assert.Throws<InvalidCastException>(() =>
+        {
+            Script2Parser.Execute(s, env);
+        });
+        Assert.That(ex.Message, Does.Contain("String"));
+    }
+
+    /// <summary>
+    /// 测试 % - 数字变量 % 字符串变量应该报错
+    /// </summary>
+    [Test]
+    public void TestModulusNumberVarAndStringVar()
+    {
+        var env = new Script2Environment();
+        var s = @"
+var num = 10;
+var str = ""world"";
+num % str;
+";
+        var ex = Assert.Throws<InvalidCastException>(() =>
+        {
+            Script2Parser.Execute(s, env);
+        });
+        Assert.That(ex.Message, Does.Contain("String"));
+    }
+
+    /// <summary>
+    /// 测试 % - 字符串常量 % 数字应该报错
+    /// </summary>
+    [Test]
+    public void TestModulusStringLiteralAndNumber()
+    {
+        var env = new Script2Environment();
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+        {
+            Script2Parser.Execute("\"hello\" % 3", env);
+        });
+        Assert.That(ex.Message, Does.Contain("No coercion operator"));
+    }
+
+    /// <summary>
+    /// 测试 % - 数字 % 字符串常量应该报错
+    /// </summary>
+    [Test]
+    public void TestModulusNumberAndStringLiteral()
+    {
+        var env = new Script2Environment();
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+        {
+            Script2Parser.Execute("10 % \"hello\"", env);
+        });
+        Assert.That(ex.Message, Does.Contain("No coercion operator"));
+    }
+
+    /// <summary>
+    /// 测试 % - 字符串 % 字符串应该报错
+    /// </summary>
+    [Test]
+    public void TestModulusStringAndString()
+    {
+        var env = new Script2Environment();
+        var s = @"
+var str1 = ""hello"";
+var str2 = ""world"";
+str1 % str2;
+";
+        var ex = Assert.Throws<InvalidCastException>(() =>
+        {
+            Script2Parser.Execute(s, env);
+        });
+        Assert.That(ex.Message, Does.Contain("String"));
+    }
 }

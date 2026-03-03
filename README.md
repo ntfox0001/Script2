@@ -187,9 +187,17 @@ sum(n) {
 
 ### 内置常量
 
+Script2 预定义了以下数学常量：
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `PI` | `3.1415926` | 圆周率 |
+| `E` | `2.71828` | 自然常数 |
+
 ```javascript
-PI   // 3.1415926
-E    // 2.71828
+// 使用示例
+PI * 2;      // 返回 6.2831852
+E * 2;       // 返回 5.43656
 ```
 
 ### 内置数学函数
@@ -211,6 +219,41 @@ Script2 内置了 `MathF` 的所有静态方法，参数和返回值均为 `floa
 | `Log(x)` | 自然对数 | `Log(2.718)` → `1` |
 | `Log10(x)` | 以 10 为底的对数 | `Log10(100)` → `2` |
 | `Exp(x)` | e 的 x 次方 | `Exp(1)` → `2.718` |
+
+### 内置字符串函数
+
+| 函数 | 描述 | 示例 |
+|------|------|------|
+| `concat(...)` | 连接多个值（自动转字符串） | `concat("Hello", " ", "World")` → `"Hello World"` |
+| `format(fmt, ...)` | 格式化字符串，使用 `{0}`, `{1}` 等占位符 | `format("Score: {0}", 95)` → `"Score: 95"` |
+
+#### concat 函数
+
+`concat` 函数支持任意数量的参数，会自动将参数转换为字符串后连接：
+
+```javascript
+concat("Hello", " ", "World"); // 返回 "Hello World"
+concat("The value is: ", 42); // 返回 "The value is: 42"
+concat("Result: ", true);     // 返回 "Result: True"
+```
+
+#### format 函数
+
+`format` 函数使用 C# 的字符串格式化语法，支持占位符：
+
+```javascript
+// 基本使用
+format("Hello {0}", "World");           // 返回 "Hello World"
+format("{0} + {1} = {2}", 2, 3, 5);   // 返回 "2 + 3 = 5"
+
+// 使用变量
+var name = "Alice";
+var age = 25;
+format("Name: {0}, Age: {1}", name, age); // 返回 "Name: Alice, Age: 25"
+
+// 重复使用占位符
+format("{0} {1} {0}", "Hello", "World"); // 返回 "Hello World Hello"
+```
 
 ### 自定义函数注册
 
@@ -272,7 +315,16 @@ addX(5); // 返回 15
 
 - `==` 和 `!=` 运算符要求两边类型相同
 - 不同类型比较会抛出 `InvalidOperationException`
-- 字符串连接使用 `+` 可能导致类型错误（当前版本不支持）
+- 字符串连接和格式化使用 `concat()` 和 `format()` 函数
+
+```javascript
+// 字符串连接
+concat("Hello", " ", "World"); // 返回 "Hello World"
+
+// 字符串格式化
+format("Score: {0}", 95);     // 返回 "Score: 95"
+format("{0} + {1} = {2}", 2, 3, 5); // 返回 "2 + 3 = 5"
+```
 
 ## 运行环境要求
 
