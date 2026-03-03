@@ -18,6 +18,10 @@ jobs:
         with:
           dotnet-version: '7.0.x'
 
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Restore dependencies
         run: dotnet restore
 
@@ -28,7 +32,7 @@ jobs:
         run: dotnet test --configuration Release --no-build
 
       - name: Pack NuGet package
-        run: dotnet pack Script2/Script2.csproj --configuration Release --no-build -p:PackageVersion=${{ github.ref_name }}
+        run: dotnet pack Script2/Script2.csproj --configuration Release --no-build -p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
