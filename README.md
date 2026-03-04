@@ -17,25 +17,25 @@
 ```csharp
 using Script2;
 
-// 创建环境
-var env = new Script2Environment();
+// 创建脚本对象
+var script = new Script2(useInterpreterMode: false);
 
 // 执行简单表达式
-var result = Script2Parser.Execute("3 + 5 * 2", env);
+var result = script.Execute("3 + 5 * 2");
 Console.WriteLine(result); // 输出: 13
 
 // 定义变量
-Script2Parser.Execute("var x = 10", env);
+script.Execute("var x = 10");
 
 // 定义函数
-Script2Parser.Execute(@"
+script.Execute(@"
 add(a, b) {
     return a + b;
 }
-", env);
+");
 
 // 调用函数
-var sum = Script2Parser.Execute("add(3, 5)", env);
+var sum = script.Execute("add(3, 5)");
 Console.WriteLine(sum); // 输出: 8
 ```
 
@@ -50,7 +50,6 @@ Script2 支持以下基本数据类型：
 | `float` | `3.14`, `10`, `0.5` | 浮点数 |
 | `string` | `"hello"`, `"world"` | 字符串（双引号包裹） |
 | `bool` | `true`, `false` | 布尔值 |
-| `null` | `null` | 空值 |
 
 ### 运算符
 
@@ -260,19 +259,19 @@ format("{0} {1} {0}", "Hello", "World"); // 返回 "Hello World Hello"
 可以在 C# 代码中注册自定义函数到脚本环境：
 
 ```csharp
-var env = new Script2Environment();
+var script = new Script2(useInterpreterMode: false);
 
 // 注册无参数函数
-env.RegisterFunc("GetCurrentTime", () => DateTime.Now);
+script.RegisterFunc("GetCurrentTime", () => DateTime.Now);
 
 // 注册单参数函数
-env.RegisterFunc<string, string>("Uppercase", (s) => s.ToUpper());
+script.RegisterFunc<string, string>("Uppercase", (s) => s.ToUpper());
 
 // 注册双参数函数
-env.RegisterFunc<int, int, int>("Add", (a, b) => a + b);
+script.RegisterFunc<int, int, int>("Add", (a, b) => a + b);
 
 // 在脚本中调用
-Script2Parser.Execute("Add(10, 20)", env); // 返回 30
+script.Execute("Add(10, 20)"); // 返回 30
 ```
 
 ## 高级用法
@@ -341,9 +340,8 @@ Script2 提供两种执行模式，由开发者根据运行环境选择：
 使用 `Expression.Compile()` 编译表达式树，执行速度最快。
 
 ```csharp
-var env = new Script2Environment();
-Script2Parser.UseInterpreterMode = false; // 默认值
-var result = Script2Parser.Execute("3 + 5 * 2", env);
+var script = new Script2(useInterpreterMode: false);
+var result = script.Execute("3 + 5 * 2");
 ```
 
 **适用场景**：
@@ -359,9 +357,8 @@ var result = Script2Parser.Execute("3 + 5 * 2", env);
 **当前状态**：⚠️ 解释器模式仍在开发中，基础框架已完成，但部分功能尚需完善。
 
 ```csharp
-var env = new Script2Environment();
-Script2Parser.UseInterpreterMode = true; // 启用解释器模式
-var result = Script2Parser.Execute("3 + 5 * 2", env);
+var script = new Script2(useInterpreterMode: true);
+var result = script.Execute("3 + 5 * 2");
 ```
 
 **适用场景**（待完善后）：
@@ -377,18 +374,20 @@ using Script2;
 
 public class Script2Setup : MonoBehaviour
 {
+    private Script2 _script;
+
     void Awake()
     {
 #if UNITY_EDITOR || !ENABLE_IL2CPP
         // Editor 或 Mono 构建：使用编译模式（快速）
-        Script2Parser.UseInterpreterMode = false;
+        _script = new Script2(useInterpreterMode: false);
 #else
         // IL2CPP 构建：解释器模式仍在开发中，暂不推荐
-        // Script2Parser.UseInterpreterMode = true;
+        // _script = new Script2(useInterpreterMode: true);
         Debug.LogWarning("Script2 IL2CPP support is under development. Please use Mono backend for now.");
 #endif
 
-        Debug.Log($"Script2 using interpreter mode: {Script2Parser.UseInterpreterMode}");
+        Debug.Log($"Script2 initialized");
     }
 }
 ```

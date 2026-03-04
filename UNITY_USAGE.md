@@ -22,7 +22,9 @@
 
 ### 2. 配置执行模式
 
-⚠️ **重要提示**：IL2CPP 解释器模式仍在开发中，目前建议使用 Unity Mono 后端。
+Script2 提供两种执行模式：
+- **编译模式**：执行速度快，但不支持 IL2CPP
+- **解释器模式**：兼容 IL2CPP，但执行速度较慢
 
 在 Unity 项目中，根据构建目标选择合适的执行模式：
 
@@ -32,18 +34,19 @@ using Script2;
 
 public class Script2Setup : MonoBehaviour
 {
+    private Script2 _script;
+
     void Awake()
     {
 #if UNITY_EDITOR || !ENABLE_IL2CPP
         // Editor 或 Mono 构建：使用编译模式（快速）
-        Script2Parser.UseInterpreterMode = false;
+        _script = new Script2(useInterpreterMode: false);
 #else
-        // IL2CPP 构建：解释器模式仍在开发中，暂不推荐
-        Debug.LogWarning("Script2 IL2CPP support is under development. Please use Mono backend for now.");
-        // Script2Parser.UseInterpreterMode = true; // 待完善后启用
+        // IL2CPP 构建：使用解释器模式（兼容）
+        _script = new Script2(useInterpreterMode: true);
 #endif
 
-        Debug.Log($"Script2 using interpreter mode: {Script2Parser.UseInterpreterMode}");
+        Debug.Log("Script2 initialized");
     }
 }
 ```
@@ -56,35 +59,35 @@ using Script2;
 
 public class Script2Example : MonoBehaviour
 {
-    private Script2Environment env;
+    private Script2 _script;
 
     void Start()
     {
-        // 创建环境
-        env = new Script2Environment();
-        env.OnPrint = Debug.Log; // 使用 Unity Debug.Log 输出
+        // 创建脚本对象
+        _script = new Script2(useInterpreterMode: false);
+        _script.OnPrint = Debug.Log; // 使用 Unity Debug.Log 输出
 
         // 执行简单表达式
-        var result = Script2Parser.Execute("3 + 5 * 2", env);
+        var result = _script.Execute("3 + 5 * 2");
         Debug.Log($"Result: {result}"); // 输出: Result: 13
 
         // 定义变量
-        Script2Parser.Execute("var x = 10", env);
-        Script2Parser.Execute("var y = 20", env);
+        _script.Execute("var x = 10");
+        _script.Execute("var y = 20");
 
         // 定义函数
-        Script2Parser.Execute(@"
+        _script.Execute(@"
 add(a, b) {
     return a + b;
 }
-", env);
+");
 
         // 调用函数
-        var sum = Script2Parser.Execute("add(3, 5)", env);
+        var sum = _script.Execute("add(3, 5)");
         Debug.Log($"Sum: {sum}"); // 输出: Sum: 8
 
         // 使用 print 函数
-        Script2Parser.Execute("print(\"Hello, Unity!\")", env);
+        _script.Execute("print(\"Hello, Unity!\")");
     }
 }
 ```
@@ -94,30 +97,30 @@ add(a, b) {
 ### 输出重定向
 
 ```csharp
-var env = new Script2Environment();
+var script = new Script2(useInterpreterMode: false);
 
 // 将 print 函数的输出重定向到 Debug.Log
-env.OnPrint = (message) => Debug.Log($"[Script2] {message}");
+script.OnPrint = (message) => Debug.Log($"[Script2] {message}");
 
 // 或者使用 Unity Console
-env.OnPrint = Debug.Log;
+script.OnPrint = Debug.Log;
 ```
 
 ### 注册自定义函数
 
 ```csharp
 // 注册 Unity Vector3 函数
-env.RegisterFunc<float, float, float, float>("CreateVector", (x, y, z) => {
+script.RegisterFunc<float, float, float, float>("CreateVector", (x, y, z) => {
     // 返回 Vector3 的长度作为示例
     return new Vector3(x, y, z).magnitude;
 });
 
 // 注册获取当前时间的函数
-env.RegisterFunc("GetTime", () => Time.time);
+script.RegisterFunc("GetTime", () => Time.time);
 
 // 在脚本中使用
-Script2Parser.Execute("var length = CreateVector(1, 2, 3)", env);
-Script2Parser.Execute("print(GetTime())", env);
+script.Execute("var length = CreateVector(1, 2, 3)");
+script.Execute("print(GetTime())");
 ```
 
 ## 性能优化建议
@@ -127,13 +130,15 @@ Script2Parser.Execute("print(GetTime())", env);
 如果脚本是固定的，建议在 `Start()` 中预定义：
 
 ```csharp
+private Script2 _script;
+
 void Start()
 {
-    env = new Script2Environment();
-    env.OnPrint = Debug.Log;
+    _script = new Script2(useInterpreterMode: false);
+    _script.OnPrint = Debug.Log;
 
     // 预定义所有函数
-    Script2Parser.Execute(@"
+    _script.Execute(@"
 CalculateDamage(attack, defense, level) {
     var baseDamage = attack - defense;
     var levelBonus = baseDamage * level * 0.1;
@@ -144,37 +149,37 @@ GenerateEnemyWave(level) {
     var count = level * 2 + 1;
     return count;
 }
-", env);
+");
 }
 
 void Update()
 {
     // 只执行需要动态计算的部分
-    var damage = Script2Parser.Execute("CalculateDamage(100, 50, 5)", env);
+    var damage = _script.Execute("CalculateDamage(100, 50, 5)");
 }
 ```
 
 ### 2. 重用环境对象
 
 ```csharp
-// ❌ 不推荐：每次执行都创建新环境
+// ❌ 不推荐：每次执行都创建新对象
 void Update()
 {
-    var env = new Script2Environment();
-    Script2Parser.Execute("x + 5", env);
+    var script = new Script2(useInterpreterMode: false);
+    script.Execute("x + 5");
 }
 
-// ✅ 推荐：重用环境对象
-private Script2Environment env;
+// ✅ 推荐：重用脚本对象
+private Script2 _script;
 
 void Start()
 {
-    env = new Script2Environment();
+    _script = new Script2(useInterpreterMode: false);
 }
 
 void Update()
 {
-    Script2Parser.Execute("x + 5", env);
+    _script.Execute("x + 5");
 }
 ```
 
@@ -185,12 +190,12 @@ void Update()
 ```csharp
 public class GameRules : MonoBehaviour
 {
-    private Script2Environment env;
+    private Script2 _script;
 
     void Start()
     {
-        env = new Script2Environment();
-        env.OnPrint = Debug.Log;
+        _script = new Script2(useInterpreterMode: false);
+        _script.OnPrint = Debug.Log;
 
         // 加载游戏规则
         var rules = @"
@@ -214,13 +219,13 @@ CalculateReward(level) {
 }
 ";
 
-        Script2Parser.Execute(rules, env);
+        _script.Execute(rules);
 
         // 使用规则
         var playerLevel = 5;
-        var maxHealth = Script2Parser.Execute($"CalculateMaxHealth({playerLevel})", env);
-        var damage = Script2Parser.Execute($"CalculateDamage({playerLevel})", env);
-        var reward = Script2Parser.Execute($"CalculateReward({playerLevel})", env);
+        var maxHealth = _script.Execute($"CalculateMaxHealth({playerLevel})");
+        var damage = _script.Execute($"CalculateDamage({playerLevel})");
+        var reward = _script.Execute($"CalculateReward({playerLevel})");
 
         Debug.Log($"Level {playerLevel}: HP={maxHealth}, DMG={damage}, Reward={reward}");
     }
@@ -232,38 +237,38 @@ CalculateReward(level) {
 ```csharp
 public class EventSystem : MonoBehaviour
 {
-    private Script2Environment env;
+    private Script2 _script;
 
     void Start()
     {
-        env = new Script2Environment();
-        env.OnPrint = Debug.Log;
+        _script = new Script2(useInterpreterMode: false);
+        _script.OnPrint = Debug.Log;
 
         // 注册 Unity 相关函数
-        env.RegisterFunc<float>("DestroyObject", (delay) => {
+        _script.RegisterFunc<float>("DestroyObject", (delay) => {
             Destroy(gameObject, delay);
             return 0;
         });
 
-        env.RegisterFunc("PlaySound", () => {
+        _script.RegisterFunc("PlaySound", () => {
             AudioSource.PlayClipAtPoint(null, transform.position);
             return 0;
         });
 
         // 定义事件脚本
-        Script2Parser.Execute(@"
+        _script.Execute(@"
 OnPlayerDeath(level) {
     print(\"Player died at level: \" + level);
     PlaySound();
     DestroyObject(2.0);
 }
-", env);
+");
     }
 
     public void OnPlayerKilled(int level)
     {
         // 触发事件
-        Script2Parser.Execute($"OnPlayerDeath({level})", env);
+        _script.Execute($"OnPlayerDeath({level})");
     }
 }
 ```
@@ -273,15 +278,15 @@ OnPlayerDeath(level) {
 ```csharp
 public class SkillSystem : MonoBehaviour
 {
-    private Script2Environment env;
+    private Script2 _script;
 
     void Start()
     {
-        env = new Script2Environment();
-        env.OnPrint = Debug.Log;
+        _script = new Script2(useInterpreterMode: false);
+        _script.OnPrint = Debug.Log;
 
         // 定义技能计算逻辑
-        Script2Parser.Execute(@"
+        _script.Execute(@"
 // 火球术技能
 Fireball(level, baseDamage) {
     var levelMultiplier = 1.0 + level * 0.2;
@@ -305,18 +310,18 @@ Shield(level, baseShield) {
     print(\"Shield: \" + shieldAmount + \" for \" + duration + \" seconds\");
     return shieldAmount;
 }
-", env);
+");
     }
 
     public void CastFireball(int level)
     {
-        var damage = Script2Parser.Execute($"Fireball({level}, 50)", env);
+        var damage = _script.Execute($"Fireball({level}, 50)");
         // 应用伤害逻辑...
     }
 
     public void CastHeal(int level)
     {
-        var healAmount = Script2Parser.Execute($"Heal({level}, 30)", env);
+        var healAmount = _script.Execute($"Heal({level}, 30)");
         // 应用治疗逻辑...
     }
 }
@@ -329,23 +334,27 @@ Shield(level, baseShield) {
 Script2 不会自动检测运行环境，需要你根据构建目标手动配置：
 
 ```csharp
+private Script2 _script;
+
+void Awake()
+{
 #if UNITY_EDITOR || !ENABLE_IL2CPP
     // Editor 或 Mono 构建：使用编译模式（快速）
-    Script2Parser.UseInterpreterMode = false;
+    _script = new Script2(useInterpreterMode: false);
 #else
     // IL2CPP 构建：使用解释器模式（兼容）
-    Script2Parser.UseInterpreterMode = true;
+    _script = new Script2(useInterpreterMode: true);
 #endif
+}
 ```
 
 ### 测试 IL2CPP 构建建议
 
 1. **在 Editor 中测试解释器模式**：
 ```csharp
-// 临时启用解释器模式，模拟 IL2CPP 环境
-Script2Parser.UseInterpreterMode = true;
-var result = Script2Parser.Execute("3 + 5 * 2", env);
-Script2Parser.UseInterpreterMode = false; // 恢复编译模式
+// 临时创建解释器模式的脚本对象，模拟 IL2CPP 环境
+var testScript = new Script2(useInterpreterMode: true);
+var result = testScript.Execute("3 + 5 * 2");
 ```
 
 2. **在真机上测试**：
@@ -369,8 +378,8 @@ Script2Parser.UseInterpreterMode = false; // 恢复编译模式
 
 **解决方案**：
 - 确保 `Script2.dll` 已正确放置在 `Assets/Plugins/Script2/`
+- 确保 IL2CPP 构建时使用解释器模式：`new Script2(useInterpreterMode: true)`
 - 检查是否正确引用了 `System.Linq.Expressions`（IL2CPP 支持表达式树创建，但不支持编译）
-- 使用 `Script2Parser.ForceInterpreterMode = true` 测试
 
 ### 问题：性能问题
 
@@ -384,13 +393,13 @@ Script2Parser.UseInterpreterMode = false; // 恢复编译模式
 **解决方案**：
 ```csharp
 // 注册 Unity API 包装函数
-env.RegisterFunc("Log", (message) => {
+script.RegisterFunc("Log", (message) => {
     Debug.Log(message);
     return 0;
 });
 
 // 在脚本中使用
-Script2Parser.Execute("Log(\"Hello from Script2!\")", env);
+script.Execute("Log(\"Hello from Script2!\")");
 ```
 
 ## 参考资源
