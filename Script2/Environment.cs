@@ -84,6 +84,155 @@ public class Script2Environment
             var values = args.Skip(1).Select(arg => arg?.ToString() ?? "null").ToArray<object>();
             return string.Format(formatString, values);
         }));
+
+        // 注册 len 函数（获取数组长度）
+        AddFunc("len", new Func<object[], object>(args =>
+        {
+            if (args.Length != 1)
+                throw new InvalidOperationException($"Function 'len' expects 1 argument, got {args.Length}.");
+            if (args[0] is List<object> list)
+                return (float)list.Count;
+            throw new InvalidOperationException($"Cannot get length of non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 push 函数（向数组末尾添加元素）
+        AddFunc("push", new Func<object[], object>(args =>
+        {
+            if (args.Length != 2)
+                throw new InvalidOperationException($"Function 'push' expects 2 arguments (array, value), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                if (args[1] is VoidValue)
+                    throw new InvalidOperationException("Cannot push void value to array.");
+                list.Add(args[1]);
+                return (float)list.Count;
+            }
+            throw new InvalidOperationException($"Cannot push to non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 remove 函数（删除数组指定索引的元素）
+        AddFunc("remove", new Func<object[], object>(args =>
+        {
+            if (args.Length != 2)
+                throw new InvalidOperationException($"Function 'remove' expects 2 arguments (array, index), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                var idx = Convert.ToInt32(args[1]);
+                if (idx < 0 || idx >= list.Count)
+                    throw new IndexOutOfRangeException($"Array index {idx} is out of range (array length: {list.Count}).");
+                var removed = list[idx];
+                list.RemoveAt(idx);
+                return removed;
+            }
+            throw new InvalidOperationException($"Cannot remove from non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 insert 函数（在数组指定位置插入元素）
+        AddFunc("insert", new Func<object[], object>(args =>
+        {
+            if (args.Length != 3)
+                throw new InvalidOperationException($"Function 'insert' expects 3 arguments (array, index, value), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                var idx = Convert.ToInt32(args[1]);
+                if (idx < 0 || idx > list.Count)
+                    throw new IndexOutOfRangeException($"Array index {idx} is out of range for insertion (array length: {list.Count}).");
+                if (args[2] is VoidValue)
+                    throw new InvalidOperationException("Cannot insert void value to array.");
+                list.Insert(idx, args[2]);
+                return (float)list.Count;
+            }
+            throw new InvalidOperationException($"Cannot insert into non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 pop 函数（移除并返回数组末尾元素）
+        AddFunc("pop", new Func<object[], object>(args =>
+        {
+            if (args.Length != 1)
+                throw new InvalidOperationException($"Function 'pop' expects 1 argument (array), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                if (list.Count == 0)
+                    return null;
+                var last = list[list.Count - 1];
+                list.RemoveAt(list.Count - 1);
+                return last;
+            }
+            throw new InvalidOperationException($"Cannot pop from non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 contains 函数（检查数组是否包含指定值）
+        AddFunc("contains", new Func<object[], object>(args =>
+        {
+            if (args.Length != 2)
+                throw new InvalidOperationException($"Function 'contains' expects 2 arguments (array, value), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                return list.Contains(args[1]);
+            }
+            throw new InvalidOperationException($"Cannot check contains on non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 indexOf 函数（查找值的索引，未找到返回 -1）
+        AddFunc("indexOf", new Func<object[], object>(args =>
+        {
+            if (args.Length != 2)
+                throw new InvalidOperationException($"Function 'indexOf' expects 2 arguments (array, value), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                return (float)list.IndexOf(args[1]);
+            }
+            throw new InvalidOperationException($"Cannot indexOf on non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 slice 函数（返回子数组，end 可选，默认到末尾）
+        AddFunc("slice", new Func<object[], object>(args =>
+        {
+            if (args.Length < 2 || args.Length > 3)
+                throw new InvalidOperationException($"Function 'slice' expects 2 or 3 arguments (array, start, [end]), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                var start = Convert.ToInt32(args[1]);
+                if (start < 0) start = list.Count + start;
+                var end = args.Length == 3 ? Convert.ToInt32(args[2]) : list.Count;
+                if (end < 0) end = list.Count + end;
+                start = Math.Max(0, Math.Min(start, list.Count));
+                end = Math.Max(0, Math.Min(end, list.Count));
+                return new List<object>(list.GetRange(start, end - start));
+            }
+            throw new InvalidOperationException($"Cannot slice non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 join 函数（用分隔符拼接数组元素为字符串）
+        AddFunc("join", new Func<object[], object>(args =>
+        {
+            if (args.Length != 2)
+                throw new InvalidOperationException($"Function 'join' expects 2 arguments (array, separator), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                return string.Join(args[1]?.ToString() ?? "", list.Select(v => v?.ToString() ?? "null"));
+            }
+            throw new InvalidOperationException($"Cannot join non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
+
+        // 注册 sort 函数（返回排序后的新数组，原数组不变）
+        AddFunc("sort", new Func<object[], object>(args =>
+        {
+            if (args.Length != 1)
+                throw new InvalidOperationException($"Function 'sort' expects 1 argument (array), got {args.Length}.");
+            if (args[0] is List<object> list)
+            {
+                var sorted = new List<object>(list);
+                sorted.Sort((a, b) =>
+                {
+                    if (a is float af && b is float bf) return af.CompareTo(bf);
+                    if (a is string as_ && b is string bs) return string.Compare(as_, bs, StringComparison.Ordinal);
+                    return string.Compare(a?.ToString(), b?.ToString(), StringComparison.Ordinal);
+                });
+                return sorted;
+            }
+            throw new InvalidOperationException($"Cannot sort non-array value of type {args[0]?.GetType().Name ?? "null"}.");
+        }));
     }
 
     /// <summary>
@@ -117,6 +266,44 @@ public class Script2Environment
         }
 
         _variables[varName] = value;
+    }
+
+    /// <summary>
+    /// 获取数组的指定索引元素（支持负索引）
+    /// </summary>
+    public object GetArrayItem(object array, object index)
+    {
+        if (array is List<object> list)
+        {
+            var idx = Convert.ToInt32(index);
+            if (idx < 0) idx = list.Count + idx;
+            if (idx < 0 || idx >= list.Count)
+                throw new IndexOutOfRangeException($"Array index {idx} is out of range (array length: {list.Count}).");
+            return list[idx];
+        }
+        throw new InvalidOperationException($"Cannot index into non-array value of type {array?.GetType().Name ?? "null"}.");
+    }
+
+    /// <summary>
+    /// 设置数组的指定索引元素（支持负索引）
+    /// </summary>
+    public void SetArrayItem(object array, object index, object value)
+    {
+        if (value is VoidValue)
+        {
+            throw new InvalidOperationException("Cannot assign void value to array element.");
+        }
+
+        if (array is List<object> list)
+        {
+            var idx = Convert.ToInt32(index);
+            if (idx < 0) idx = list.Count + idx;
+            if (idx < 0 || idx >= list.Count)
+                throw new IndexOutOfRangeException($"Array index {idx} is out of range (array length: {list.Count}).");
+            list[idx] = value;
+            return;
+        }
+        throw new InvalidOperationException($"Cannot index into non-array value of type {array?.GetType().Name ?? "null"}.");
     }
 
     public object CallFunction(string fn, object[] args)

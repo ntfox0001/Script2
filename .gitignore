@@ -3,5 +3,6 @@
 .idea/
 .vs/
 .vscode/
+.workbuddy/
 
 *.DotSettings.user

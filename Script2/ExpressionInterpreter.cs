@@ -71,6 +71,7 @@ public class ExpressionInterpreter
             ExpressionType.OrElse => VisitBinary((BinaryExpression)expr),
             ExpressionType.Block => VisitBlock((BlockExpression)expr),
             ExpressionType.Assign => VisitAssign((BinaryExpression)expr),
+            ExpressionType.PostIncrementAssign => VisitPostIncrementAssign((UnaryExpression)expr),
             ExpressionType.Try => VisitTry((TryExpression)expr),
             ExpressionType.Throw => VisitThrow((UnaryExpression)expr),
             ExpressionType.Parameter => VisitParameter((ParameterExpression)expr),
@@ -295,6 +296,29 @@ public class ExpressionInterpreter
         }
 
         return value;
+    }
+
+    private object VisitPostIncrementAssign(UnaryExpression expr)
+    {
+        // operand is a ParameterExpression
+        if (expr.Operand is ParameterExpression paramExpr)
+        {
+            // 获取当前值
+            var currentValue = (int)VisitParameter(paramExpr);
+            // 赋值 +1
+            var newValue = currentValue + 1;
+            foreach (var scope in _variableScopes)
+            {
+                if (scope.ContainsKey(paramExpr))
+                {
+                    scope[paramExpr] = newValue;
+                    // 后置递增返回旧值
+                    return currentValue;
+                }
+            }
+            throw new InvalidOperationException($"Variable '{paramExpr.Name}' is not defined in current scope.");
+        }
+        throw new NotSupportedException($"PostIncrementAssign on non-parameter expression is not supported by the interpreter.");
     }
 
     private object VisitBlock(BlockExpression block)

@@ -122,14 +122,55 @@ internal static class ParserDeclare
         from varName in Token.EqualTo(Script2Token.Identifier)
         select MakeExpression.GetVariable(varName.ToStringValue());
 
-    public static readonly TokenListParser<Script2Token, Expression> Factor =
+    // ========== 数组支持 ==========
+
+    // 数组元素列表解析器：[expr, expr, ...]
+    public static readonly TokenListParser<Script2Token, Expression[]> ArrayElementList =
+        Parse.Ref(() => Expr).ManyDelimitedBy(Token.EqualTo(Script2Token.Comma));
+
+    // 数组字面量解析器：[expr, expr, ...]
+    public static readonly TokenListParser<Script2Token, Expression> ArrayLiteral =
+        from lbrack in Token.EqualTo(Script2Token.LBrack)
+        from elements in ArrayElementList
+        from rbrack in Token.EqualTo(Script2Token.RBrack)
+        select MakeExpression.MakeArrayLiteral(elements);
+
+    // Primary: 最基本的表达式单元（函数调用、变量、常量、数组字面量）
+    public static readonly TokenListParser<Script2Token, Expression> Primary =
         (from lparen in Token.EqualTo(Script2Token.LParen)
             from expr in Parse.Ref(() => Expr)
             from rparen in Token.EqualTo(Script2Token.RParen)
             select expr)
         .Or(FuncCall).Try() // 先尝试匹配函数调用
         .Or(GetVar) // 再匹配变量引用
+        .Or(ArrayLiteral) // 数组字面量
         .Or(Constant);
+
+    // PostfixExpr: Primary 后跟可选的 [index] 索引访问
+    public static readonly TokenListParser<Script2Token, Expression> ArrayIndex =
+        from primary in Primary
+        from lbrack in Token.EqualTo(Script2Token.LBrack)
+        from index in Parse.Ref(() => Expr)
+        from rbrack in Token.EqualTo(Script2Token.RBrack)
+        select MakeExpression.MakeArrayIndex(primary, index);
+
+    public static readonly TokenListParser<Script2Token, Expression> PostfixExpr =
+        ArrayIndex.Try().Or(Primary);
+
+    // 数组索引赋值：id[index] = expr
+    public static readonly TokenListParser<Script2Token, Expression> ArrayIndexAssign =
+        from varName in Token.EqualTo(Script2Token.Identifier)
+        from lbrack in Token.EqualTo(Script2Token.LBrack)
+        from index in Parse.Ref(() => Expr)
+        from rbrack in Token.EqualTo(Script2Token.RBrack)
+        from eq in Token.EqualTo(Script2Token.Equals)
+        from value in Parse.Ref(() => Expr)
+        select MakeExpression.MakeArrayIndexAssign(MakeExpression.GetVariable(varName.ToStringValue()), index, value);
+
+    // ========== 表达式优先级 ==========
+
+    public static readonly TokenListParser<Script2Token, Expression> Factor =
+        PostfixExpr;
 
     public static readonly TokenListParser<Script2Token, Expression> NotFactor =
         from notOp in Token.EqualTo(Script2Token.Not)
@@ -165,11 +206,16 @@ internal static class ParserDeclare
     public static readonly TokenListParser<Script2Token, Expression> Expr =
         Parse.Chain(Or, LogicalAndExpr, MakeExpression.MakeLogical);
 
+    // ========== 语句 ==========
+
     public static readonly TokenListParser<Script2Token, Expression> IfStatement =
         Parse.Ref(() => IfStatementImpl);
 
     public static readonly TokenListParser<Script2Token, Expression> WhileStatement =
         Parse.Ref(() => WhileStatementImpl);
+
+    public static readonly TokenListParser<Script2Token, Expression> ForInStatement =
+        Parse.Ref(() => ForInStatementImpl);
 
     public static readonly TokenListParser<Script2Token, Expression> ReturnStatement =
         from returnKw in Token.EqualTo(Script2Token.Return)
@@ -177,7 +223,7 @@ internal static class ParserDeclare
         select MakeExpression.MakeReturnStatement(expr);
 
     public static readonly TokenListParser<Script2Token, Expression> Statement =
-        SetVar.Or(ReassignVar.Try()).Or(IfStatement).Or(WhileStatement).Or(ReturnStatement).Or(Expr);
+        SetVar.Or(ArrayIndexAssign.Try()).Or(ReassignVar.Try()).Or(IfStatement).Or(WhileStatement).Or(ForInStatement).Or(ReturnStatement).Or(Expr);
 
     public static readonly TokenListParser<Script2Token, Expression> GlobalStatement =
         FuncDecl.Try().Or(Statement);
@@ -214,6 +260,16 @@ internal static class ParserDeclare
         from rp in Token.EqualTo(Script2Token.RParen)
         from body in Parse.Ref(() => StatementBlock)
         select MakeExpression.MakeWhileStatement(condition, body);
+
+    public static readonly TokenListParser<Script2Token, Expression> ForInStatementImpl =
+        from forKeyword in Token.EqualTo(Script2Token.For)
+        from itemName in Token.EqualTo(Script2Token.Identifier)
+        from inKeyword in Token.EqualTo(Script2Token.In)
+        from iterable in Parse.Ref(() => Expr)
+        from body in Parse.Ref(() => StatementBlock)
+        select MakeExpression.MakeForInStatement(itemName.ToStringValue(), iterable, body);
+
+    // ========== 程序入口 ==========
 
     public static readonly TokenListParser<Script2Token, Expression[]> Program =
         (from stmt in GlobalStatement

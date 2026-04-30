@@ -14,20 +14,23 @@ namespace Script2
                 ["%"] = Script2Token.Modulo,
 
                 ["="] = Script2Token.Equals,
-                
+
                 [">"] = Script2Token.Greater,
                 ["<"] = Script2Token.Less,
-                
+
                 [","] = Script2Token.Comma,
                 [";"] = Script2Token.Semicolon,
-                
+
                 ["{"] = Script2Token.LBrace,
                 ["}"] = Script2Token.RBrace,
-                
+
                 ["("] = Script2Token.LParen,
                 [")"] = Script2Token.RParen,
+
+                ["["] = Script2Token.LBrack,
+                ["]"] = Script2Token.RBrack,
             };
-        
+
         private static readonly Dictionary<string, Script2Token> TwoCharOperators =
             new()
             {
@@ -36,7 +39,7 @@ namespace Script2
                 [">="] = Script2Token.GreaterEqual,
                 ["<="] = Script2Token.LessEqual,
             };
-        
+
         private static readonly Dictionary<string, Script2Token> Keywords =
             new()
             {
@@ -49,6 +52,8 @@ namespace Script2
                 ["if"] = Script2Token.If,
                 ["else"] = Script2Token.Else,
                 ["while"] = Script2Token.While,
+                ["for"] = Script2Token.For,
+                ["in"] = Script2Token.In,
                 ["return"] = Script2Token.Return,
 
                 ["true"] = Script2Token.True,

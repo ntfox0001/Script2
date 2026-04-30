@@ -9,7 +9,7 @@ namespace Script2
         Number,
         String,
         Identifier,
-        
+
         [Token(Category = "keyword", Example = "var")]
         Var,
         [Token(Category = "keyword", Example = "if")]
@@ -18,6 +18,10 @@ namespace Script2
         Else,
         [Token(Category = "keyword", Example = "while")]
         While,
+        [Token(Category = "keyword", Example = "for")]
+        For,
+        [Token(Category = "keyword", Example = "in")]
+        In,
         [Token(Category = "keyword", Example = "return")]
         Return,
         [Token(Category = "keyword", Example = "true")]
@@ -30,7 +34,7 @@ namespace Script2
         Or,
         [Token(Category = "keyword", Example = "not")]
         Not,
-        
+
         [Token(Category = "operator", Example = "+")]
         Plus,
         [Token(Category = "operator", Example = "-")]
@@ -43,7 +47,7 @@ namespace Script2
         Modulo,
         [Token(Category = "operator", Example = "=")]
         Equals,
-        
+
         [Token(Category = "operator", Example = ">")]
         Greater,
         [Token(Category = "operator", Example = "<")]
@@ -56,7 +60,7 @@ namespace Script2
         EqualEqual,
         [Token(Category = "operator", Example = "!=")]
         NotEqual,
-        
+
         [Token(Category = "sign", Example = "(")]
         LParen,
         [Token(Category = "sign", Example = ")")]
@@ -69,5 +73,10 @@ namespace Script2
         LBrace,
         [Token(Category = "sign", Example = "}")]
         RBrace,
+
+        [Token(Category = "sign", Example = "[")]
+        LBrack,
+        [Token(Category = "sign", Example = "]")]
+        RBrack,
     }
 }
