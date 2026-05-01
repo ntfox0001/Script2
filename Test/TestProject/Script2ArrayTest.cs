@@ -576,8 +576,290 @@ for item in arr {
 }
 sum;";
         var r = Script2Parser.Execute(s, _env);
-        // item 每次被重新赋值为数组元素，item+1 不影响下一次迭代
-        // sum = (10+1) + (20+1) + (30+1) = 63
         Assert.That(r, Is.EqualTo(63f));
+    }
+
+    // ==================== 函数参数为数组的测试 ====================
+
+    [Test]
+    public void Test_FuncParam_ArraySum()
+    {
+        var s = @"
+sum(arr) {
+    var total = 0;
+    for item in arr {
+        total = total + item;
+    }
+    return total;
+}
+sum([1, 2, 3, 4, 5]);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(15f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayModify()
+    {
+        var s = @"
+addOne(arr) {
+    var i = 0;
+    while (i < len(arr)) {
+        arr[i] = arr[i] + 1;
+        i = i + 1;
+    }
+    return arr;
+}
+var a = [1, 2, 3];
+addOne(a);
+a[0];";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(2f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayModify_AllElements()
+    {
+        var s = @"
+doubleAll(arr) {
+    var i = 0;
+    while (i < len(arr)) {
+        arr[i] = arr[i] * 2;
+        i = i + 1;
+    }
+}
+var a = [1, 2, 3];
+doubleAll(a);
+a;";
+        var r = Script2Parser.Execute(s, _env);
+        var list = (List<object>)r;
+        Assert.That(list, Is.EqualTo(new List<object> { 2f, 4f, 6f }));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayReturn()
+    {
+        var s = @"
+reverse(arr) {
+    var result = [];
+    var i = len(arr) - 1;
+    while (i >= 0) {
+        push(result, arr[i]);
+        i = i - 1;
+    }
+    return result;
+}
+reverse([1, 2, 3]);";
+        var r = Script2Parser.Execute(s, _env);
+        var list = (List<object>)r;
+        Assert.That(list, Is.EqualTo(new List<object> { 3f, 2f, 1f }));
+    }
+
+    [Test]
+    public void Test_FuncParam_MultipleParamsWithArray()
+    {
+        var s = @"
+findIndex(arr, target) {
+    var i = 0;
+    while (i < len(arr)) {
+        if (arr[i] == target) {
+            return i;
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+findIndex([10, 20, 30], 20);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void Test_FuncParam_MultipleParamsWithArray_NotFound()
+    {
+        var s = @"
+findIndex(arr, target) {
+    var i = 0;
+    while (i < len(arr)) {
+        if (arr[i] == target) {
+            return i;
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+findIndex([10, 20, 30], 99);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(-1f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayWithBuiltIn()
+    {
+        var s = @"
+appendAndReturn(arr, val) {
+    push(arr, val);
+    return len(arr);
+}
+var a = [1, 2];
+appendAndReturn(a, 3);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(3f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayWithBuiltIn_VerifyModified()
+    {
+        var s = @"
+appendAndReturn(arr, val) {
+    push(arr, val);
+    return len(arr);
+}
+var a = [1, 2];
+appendAndReturn(a, 3);
+a[2];";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(3f));
+    }
+
+    [Test]
+    public void Test_FuncParam_NestedArrayParam()
+    {
+        var s = @"
+flatten(matrix) {
+    var result = [];
+    for row in matrix {
+        for item in row {
+            push(result, item);
+        }
+    }
+    return result;
+}
+flatten([[1, 2], [3, 4]]);";
+        var r = Script2Parser.Execute(s, _env);
+        var list = (List<object>)r;
+        Assert.That(list, Is.EqualTo(new List<object> { 1f, 2f, 3f, 4f }));
+    }
+
+    [Test]
+    public void Test_FuncParam_PassArrayVariable()
+    {
+        var s = @"
+getFirst(arr) {
+    return arr[0];
+}
+var myArr = [100, 200, 300];
+getFirst(myArr);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(100f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayAsCondition()
+    {
+        var s = @"
+isEmpty(arr) {
+    return len(arr) == 0;
+}
+isEmpty([]);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(true));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayAsCondition_NotEmpty()
+    {
+        var s = @"
+isEmpty(arr) {
+    return len(arr) == 0;
+}
+isEmpty([1]);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(false));
+    }
+
+    [Test]
+    public void Test_FuncParam_ChainArrayFunctions()
+    {
+        var s = @"
+sum(arr) {
+    var total = 0;
+    for item in arr {
+        total = total + item;
+    }
+    return total;
+}
+average(arr) {
+    return sum(arr) / len(arr);
+}
+average([10, 20, 30]);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(20f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayWithStrings()
+    {
+        var s = @"
+concatAll(arr) {
+    var result = """";
+    for item in arr {
+        result = concat(result, item);
+    }
+    return result;
+}
+concatAll([""a"", ""b"", ""c""]);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo("abc"));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayRemoveInFunction()
+    {
+        var s = @"
+removeFirst(arr) {
+    return remove(arr, 0);
+}
+var a = [10, 20, 30];
+removeFirst(a);
+a[0];";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(20f));
+    }
+
+    [Test]
+    public void Test_FuncParam_EmptyArrayParam()
+    {
+        var s = @"
+safeFirst(arr) {
+    if (len(arr) == 0) {
+        return -1;
+    }
+    return arr[0];
+}
+safeFirst([]);";
+        var r = Script2Parser.Execute(s, _env);
+        Assert.That(r, Is.EqualTo(-1f));
+    }
+
+    [Test]
+    public void Test_FuncParam_ArrayInsertInFunction()
+    {
+        var s = @"
+insertSorted(arr, val) {
+    var i = 0;
+    while (i < len(arr)) {
+        if (arr[i] > val) {
+            insert(arr, i, val);
+            return arr;
+        }
+        i = i + 1;
+    }
+    push(arr, val);
+    return arr;
+}
+insertSorted([1, 3, 5], 4);";
+        var r = Script2Parser.Execute(s, _env);
+        var list = (List<object>)r;
+        Assert.That(list, Is.EqualTo(new List<object> { 1f, 3f, 4f, 5f }));
     }
 }
