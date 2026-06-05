@@ -412,7 +412,7 @@ format("{0} + {1} = {2}", 2, 3, 5); // 返回 "2 + 3 = 5"
 
 - .NET 7.0 或更高版本
 - 依赖库: Superpower (解析器组合子库)
-- **Unity IL2CPP**: 支持使用解释器模式（开发中）
+- **Unity IL2CPP**: 支持使用解释器模式
 
 ## 执行模式选择
 
@@ -433,21 +433,19 @@ var result = script.Execute("3 + 5 * 2");
 - ✅ Unity Mono 后端
 - ❌ Unity IL2CPP 后端（不支持 `Expression.Compile()`）
 
-### 解释器模式（兼容 IL2CPP，开发中）
+### 解释器模式（兼容 IL2CPP）
 
 不编译表达式树，直接解释执行，兼容 IL2CPP 但速度较慢。
-
-**当前状态**：⚠️ 解释器模式仍在开发中，基础框架已完成，但部分功能尚需完善。
 
 ```csharp
 var script = new Script2(useInterpreterMode: true);
 var result = script.Execute("3 + 5 * 2");
 ```
 
-**适用场景**（待完善后）：
+**适用场景**：
 - ✅ Unity IL2CPP 后端
 - ✅ 需要跨平台的 Unity 项目
-- ⚠️ 执行速度比编译模式慢约 10-100 倍（预期）
+- ⚠️ 执行速度比编译模式慢
 
 ### Unity 项目推荐配置
 
@@ -465,9 +463,8 @@ public class Script2Setup : MonoBehaviour
         // Editor 或 Mono 构建：使用编译模式（快速）
         _script = new Script2(useInterpreterMode: false);
 #else
-        // IL2CPP 构建：解释器模式仍在开发中，暂不推荐
-        // _script = new Script2(useInterpreterMode: true);
-        Debug.LogWarning("Script2 IL2CPP support is under development. Please use Mono backend for now.");
+        // IL2CPP 构建：使用解释器模式
+        _script = new Script2(useInterpreterMode: true);
 #endif
 
         Debug.Log($"Script2 initialized");
